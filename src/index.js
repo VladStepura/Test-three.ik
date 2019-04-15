@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import MyGLTFLoader from "./loaders/MyGLTFLoader";
-import "./utils/OrbitControls";
-import "./utils/TransformControls";
+import {OrbitControls} from "./utils/OrbitControls";
+import {TransformControls} from "./utils/TransformControls";
 import IkObject from "./objects/IkObject";
 
 
@@ -29,8 +29,8 @@ function main()
     scene.add(pivot);
 
     //#region Controls
-    let orbit = new THREE.OrbitControls( camera, renderer.domElement );
-    let control = new THREE.TransformControls( camera, renderer.domElement );
+    let orbit = new OrbitControls( camera, renderer.domElement );
+    let control = new TransformControls( camera, renderer.domElement );
     control.addEventListener('dragging-changed', function ( event ) {
         orbit.enabled = ! event.value;
     });

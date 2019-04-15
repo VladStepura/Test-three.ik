@@ -3,7 +3,7 @@ import * as THREE from "three";
  * @author arodic / https://github.com/arodic
  */
 
-THREE.TransformControls = function ( camera, domElement ) {
+export const TransformControls = function ( camera, domElement ) {
 
 	THREE.Object3D.call( this );
 
@@ -11,10 +11,10 @@ THREE.TransformControls = function ( camera, domElement ) {
 
 	this.visible = false;
 
-	var _gizmo = new THREE.TransformControlsGizmo();
+	var _gizmo = new TransformControlsGizmo();
 	this.add( _gizmo );
 
-	var _plane = new THREE.TransformControlsPlane();
+	var _plane = new TransformControlsPlane();
 	this.add( _plane );
 
 	var scope = this;
@@ -605,16 +605,16 @@ THREE.TransformControls = function ( camera, domElement ) {
 
 };
 
-THREE.TransformControls.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
+TransformControls.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
 
-  constructor: THREE.TransformControls,
+  constructor: TransformControls,
 
   isTransformControls: true
 
 } );
 
 
-THREE.TransformControlsGizmo = function () {
+const TransformControlsGizmo = function () {
 
 	'use strict';
 
@@ -1355,16 +1355,16 @@ THREE.TransformControlsGizmo = function () {
 
 };
 
-THREE.TransformControlsGizmo.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
+TransformControlsGizmo.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
 
-	constructor: THREE.TransformControlsGizmo,
+	constructor: TransformControlsGizmo,
 
 	isTransformControlsGizmo: true
 
 } );
 
 
-THREE.TransformControlsPlane = function () {
+const TransformControlsPlane = function () {
 
 	'use strict';
 
@@ -1458,9 +1458,9 @@ THREE.TransformControlsPlane = function () {
 
 };
 
-THREE.TransformControlsPlane.prototype = Object.assign( Object.create( THREE.Mesh.prototype ), {
+TransformControlsPlane.prototype = Object.assign( Object.create( THREE.Mesh.prototype ), {
 
-	constructor: THREE.TransformControlsPlane,
+	constructor: TransformControlsPlane,
 
 	isTransformControlsPlane: true
 

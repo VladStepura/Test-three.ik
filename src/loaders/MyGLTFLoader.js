@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import "./GLTFLoader";
+import {GLTFLoader} from "./GLTFLoader";
 /*
 Loader for GLTF Models
 */
@@ -7,7 +7,7 @@ class MyGLTFLoader
 {
     constructor()
     {
-        this.loader = new THREE.GLTFLoader();
+        this.loader = new GLTFLoader();
         this.loaded = (gltf) => {};
     }
 

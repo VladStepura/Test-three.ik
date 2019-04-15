@@ -34,10 +34,10 @@ class IkObject
                 }
                 if(this.isRightHandBone(object))
                 {
-                    let constraints = [new IKBallConstraint(90)];
+                    let constraints = [new IKBallConstraint(120)];
                     if(object.name === "RightShoulder")
                     {
-                        constraints = [new IKBallConstraint(90)];
+                        constraints = [new IKBallConstraint(0)];
                         setZForward(object);
                         rigMesh.bind(rigMesh.skeleton)
                     }
@@ -51,8 +51,6 @@ class IkObject
         skeletonHelper.material.linewidth = 3;
         scene.add( skeletonHelper );
 
-        const helper = new IKHelper(this.ik);
-        scene.add(helper);
     }
 
     isRightHandBone(bone)
