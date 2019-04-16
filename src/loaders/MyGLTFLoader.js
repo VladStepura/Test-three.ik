@@ -32,7 +32,7 @@ class MyGLTFLoader
             //Throwing Error
             function ( error )
             {
-                console.log( 'An error happened' );
+                console.log( 'An error happened: ' + error );
             }
         );
     }
