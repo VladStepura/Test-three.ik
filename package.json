@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "src/TodoItem.js",
   "dependencies": {
-    "three": "^0.103.0",
-    "three-ik": "^0.1.0"
+    "three": "^0.103.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",

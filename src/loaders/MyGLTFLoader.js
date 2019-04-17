@@ -22,7 +22,6 @@ class MyGLTFLoader
             {
                 scene.add( gltf.scene );
                 gltf.scene.children[0].updateMatrixWorld();
-                console.log(this.loaded);
                 this.loaded(gltf);
             },
             function ( xhr )

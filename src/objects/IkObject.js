@@ -1,4 +1,4 @@
-import {IK, IKBallConstraint, IKChain, IKHelper, IKJoint} from "three-ik";
+import {IK, IKBallConstraint, IKChain, IKHelper, IKHingeConstraint, IKJoint} from "../core/three-ik";
 import * as THREE from "three";
 import setZForward from "../utils/axisUtils";
 import ChainObject from "./ChainObject";
@@ -10,7 +10,7 @@ class IkObject
 
     }
 
-    initObject(scene, movingTarget)
+    initObject(scene, ...movingTarget)
     {
         this.ik = new IK();
         let bones = [];
@@ -18,15 +18,21 @@ class IkObject
         let joints = {};
         let chain = new IKChain();
         let rigMesh = scene.children[0].children[1];
-        console.log(rigMesh);
+        console.log(scene.children[0].children[1]);
         let skeleton = null;
         this.rigMesh = rigMesh;
         let chainObjects = [];
-      //  chainObjects.push(new ChainObject("Hips", "Head"));
-        chainObjects.push(new ChainObject("RightShoulder", "RightHandThumb1", movingTarget, "Spine2"));
-        chainObjects.push(new ChainObject("LeftShoulder", "LeftHandThumb1", movingTarget, "Spine2" ));
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget, "Hips" ));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget, "Hips" ));
+        //chainObjects.push(new ChainObject("Hips", "Head"));
+        //chainObjects[0].defaultConstraint = [new IKBallConstraint(0)];
+        chainObjects.push(new ChainObject("RightShoulder", "RightHandThumb1", movingTarget[0]/*, "Spine2"*/));
+        chainObjects.push(new ChainObject("LeftShoulder", "LeftHandThumb1", movingTarget[1]/*, "Spine2" */));
+        chainObjects[1].setConstraints([new IKHingeConstraint(90)],
+                                        [new IKHingeConstraint(180)],
+                                        [new IKHingeConstraint(180)],
+                                        [new IKHingeConstraint(180)],
+                                        [new IKHingeConstraint(180)]);
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget[2]/*, "Hips"*/));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget[3]/*, "Hips"*/));
 
         scene.traverse((object) =>
         {
@@ -49,7 +55,7 @@ class IkObject
                     {
                         let chain = chainObject.chain;
 
-                        let constraints = [new IKBallConstraint(120)];
+                        let constraints = chainObject.getCurrentConstraint();
                         if(object.name === chainObject.baseObjectName)
                         {
                             let rootName = chainObject.rootJointName;
@@ -60,39 +66,33 @@ class IkObject
                                 chain.add(joints[rootName]);
                             }
 
-                            console.log("Chain started");
                             chainObject.isChainObjectStarted = true;
                             chains.push(chain);
-                            constraints = [new IKBallConstraint(90)];
-
+                            //constraints = [new IKHingeConstraint(120)];
 
                             setZForward(object);
                             rigMesh.bind(rigMesh.skeleton)
                         }
-                        console.log("Chain element name = " + object.name);
                         let target =  null;
                         if(object.name === chainObject.lastObjectName)
                         {
-
-
                             target = chainObject.movingTarget;
-                            console.log("Chain finished");
                             chainObject.isChainObjectStarted = false
                         }
-
                         let joint = new IKJoint(object, {constraints});
 
                         joints[object.name] = joint;
                         chain.add(joint, {target});
+                        chainObject.currentJoint++;
                     }
                 });
 
             }
         });
-     /*   for (let i = 1; i < chainObjects.length; i++)
-        {
-            chainObjects[0].chain.connect( chainObjects[i].chain);
-        }*/
+        //for (let i = 1; i < chainObjects.length; i++)
+        //{
+        //    chainObjects[0].chain.connect( chainObjects[i].chain);
+        //}
         chains.forEach((chain) =>
         {
             this.ik.add(chain);
