@@ -14,7 +14,7 @@ class ChainObject
         this.rootJointName = rootJointName;
         this.currentJoint = 0;
         this.constraints = [];
-        this.defaultConstraint = [new IKHingeConstraint(120)];
+        this.defaultConstraint = [new IKHingeConstraint(180)];
     }
 
     getCurrentConstraint()
