@@ -55,41 +55,11 @@ class SelectiveIkObject
                     }
                     let constraint = [new IKHingeConstraint(180)];
                     let joint = new IKJoint(object, {constraint});
-                   // ikChain.add(joint);
                     if(object.name === "Hips")
                     {
                         hipsJoint = joint
                     }
                 }
-               /* if (object.name === "RightUpLeg" ||
-                    object.name === "RightLeg" ||
-                    object.name === "RightFoot" ||
-                    object.name === "RightToeBase") {
-
-                    let ikChain = chains[1];
-                    let joint = new IKJoint(object, {constraints});
-                    let target = null;
-                    if (object.name === "RightToeBase")
-                    {
-                        target = movingTarget[1];
-                    }
-                    ikChain.add(joint, {target});
-                }
-
-                if (object.name === "LeftUpLeg" ||
-                    object.name === "LeftLeg" ||
-                    object.name === "LeftFoot" ||
-                    object.name === "LeftToeBase")
-                {
-                    let ikChain = chains[2];
-                    let joint = new IKJoint(object, {constraints});
-                    let target = null;
-                    if (object.name === "LeftToeBase")
-                    {
-                        target = movingTarget[0];
-                    }
-                    ikChain.add(joint, {target});
-                }*/
             }
         });
         for (let i = 0; i < 3; i++)
@@ -97,20 +67,13 @@ class SelectiveIkObject
             chains.push(new IKChain());
         }
         let ikChain = chains[0];
-        //ikChain.add(hipsJoint);
         this.addtoChainThroughBones(ikChain, rigMesh.skeleton.bones[0].children[1], movingTarget[0]);
 
         ikChain = chains[1];
-        //ikChain.add(hipsJoint);
         this.addtoChainThroughBones(ikChain, rigMesh.skeleton.bones[0].children[2], movingTarget[1]);
 
         ikChain = chains[2];
         this.addtoChainThroughBones(ikChain, rigMesh.skeleton.bones[0]);
-
-       // for (let i = 1; i < chains.length; i++)
-       // {
-       //     chains[0].connect(chains[i]);
-       // }
 
         chains.forEach((chain) =>
         {

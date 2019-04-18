@@ -1,8 +1,6 @@
-import * as THREE from "three";
 import {GLTFLoader} from "./GLTFLoader";
-/*
-Loader for GLTF Models
-*/
+
+// MyGLTFLoader is loader for .gltf and .glb models
 class MyGLTFLoader
 {
     constructor()
@@ -11,13 +9,13 @@ class MyGLTFLoader
         this.loaded = (gltf) => {};
     }
 
-    //Loading model to scene
+    // Loading model to scene
     loadToScene(src, scene)
     {
         this.loader.load(
-            // resource URL
+            // Resource URL
             src,
-            // called when the resource is loaded
+            // Called when the resource is loaded
             ( gltf ) =>
             {
                 console.log(gltf.scene.children[0].position );
@@ -26,11 +24,12 @@ class MyGLTFLoader
                 gltf.scene.children[0].updateMatrixWorld();
                 this.loaded(gltf);
             },
+            // Loading progress
             function ( xhr )
             {
                 console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
             },
-            //Throwing Error
+            // Throwing Error
             function ( error )
             {
                 console.log( 'An error happened: ' + error );

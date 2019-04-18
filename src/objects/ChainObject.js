@@ -1,5 +1,8 @@
 import {IKChain, IKHingeConstraint} from "../core/three-ik";
 
+// ChainObject is class which contains all info about chain
+// From which element chain is starting and ending
+// Joints constraints etc.
 class ChainObject
 {
 
@@ -17,12 +20,15 @@ class ChainObject
         this.defaultConstraint = [new IKHingeConstraint(180)];
     }
 
+    // Takes constraint for current joint
     getCurrentConstraint()
     {
         let constraintForCurrentJoint = this.constraints[this.currentJoint];
+        this.currentJoint++;
         return constraintForCurrentJoint === undefined ? this.defaultConstraint : constraintForCurrentJoint;
     }
 
+    // Sets constraints for joints
     setConstraints(...args)
     {
         this.constraints = args;
