@@ -22,20 +22,21 @@ class IkObject
         let skeleton = null;
         this.rigMesh = rigMesh;
         let chainObjects = [];
-        chainObjects.push(new ChainObject("Hips", "Head"));
-        chainObjects[0].defaultConstraint = [new IKBallConstraint(0)];
-        chainObjects.push(new ChainObject("RightShoulder", "RightHandThumb1", movingTarget[0], "Spine2"));
-        chainObjects.push(new ChainObject("LeftShoulder", "LeftHandThumb1", movingTarget[1], "Spine2" ));
-        for(let i = 1; i < 3; i++)
+        //chainObjects.push(new ChainObject("Hips", "Head"));
+        //chainObjects[0].defaultConstraint = [new IKBallConstraint(0)];
+        chainObjects.push(new ChainObject("RightShoulder", "RightHandThumb1", movingTarget[0]/*, "Spine2"*/));
+        chainObjects.push(new ChainObject("LeftShoulder", "LeftHandThumb1", movingTarget[1]/*, "Spine2"*/ ));
+
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget[2]/*, "Hips"*/));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget[3]/*, "Hips"*/));
+        for(let i = 0; i < 4; i++)
         {
-            chainObjects[i].setConstraints([new IKHingeConstraint(90)],
-                [new IKHingeConstraint(180)],
-                [new IKHingeConstraint(180)],
-                [new IKHingeConstraint(180)],
+            chainObjects[i].setConstraints([new IKHingeConstraint(360)],
+                [new IKHingeConstraint(360)],
+                [new IKHingeConstraint(360)],
+                [new IKHingeConstraint(360)],
                 [new IKBallConstraint(90)]);
         }
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget[2], "Hips"));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget[3], "Hips"));
         scene.traverse((object) =>
         {
             if(object instanceof THREE.Bone)
@@ -79,11 +80,6 @@ class IkObject
 
                                 let joint = baseRoot/// new IKJoint(baseRoot.bone, baseRoot.constraints);
 
-                                if(object.name === "RightUpLeg")
-                                {
-                                    joint._direction = new THREE.Vector3(.0, -1, .0);
-                                    joint.distance += 0.097;
-                                }
                                 chain.add(joint);
                             }
 

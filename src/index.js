@@ -3,6 +3,7 @@ import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import {OrbitControls} from "./utils/OrbitControls";
 import {TransformControls} from "./utils/TransformControls";
 import IkObject from "./objects/IkObject";
+import SelectiveIkObject from "./objects/SelectiveIkObject";
 
 
 function main()
@@ -42,16 +43,28 @@ function main()
 
 
     //#region Loader
+/*
     let loadedObject = {};
     const gltfLoader = new MyGLTFLoader();
     gltfLoader.loaded = (gltf) =>
     {
-        loadedObject = new IkObject();
-        loadedObject.initObject(gltf.scene, rightHandMovingTarget, leftHandMovingTarget, leftLegMovingTarget, rightLegMovingTarget);
         console.log(gltf.scene);
+        //loadedObject = new SelectiveIkObject();
+        //loadedObject.initObject(gltf.scene, leftLegMovingTarget, rightLegMovingTarget);
     };
+     gltfLoader.loadToScene('./assets/adult-male.glb', scene);
+*/
 
-    gltfLoader.loadToScene('./assets/adult-male.glb', scene);
+    let loadedObject2 = {};
+    const gltfLoader2 = new MyGLTFLoader();
+    gltfLoader2.loaded = (gltf) =>
+    {
+        loadedObject2 = new IkObject();
+        loadedObject2.initObject(gltf.scene, rightHandMovingTarget, leftHandMovingTarget, leftLegMovingTarget, rightLegMovingTarget);
+    }
+
+
+    gltfLoader2.loadToScene('./assets/adult-male.glb', scene);
     //#endregion
 
     //#region Raycasting
@@ -102,9 +115,10 @@ function main()
     function animate()
     {
 
-        if(loadedObject.ik !== undefined)
+        if(loadedObject2.ik !== undefined)
         {
-            loadedObject.ik.solve();
+           // loadedObject.ik.solve();
+            loadedObject2.ik.solve();
         }
         renderer.render(scene, camera);
 
