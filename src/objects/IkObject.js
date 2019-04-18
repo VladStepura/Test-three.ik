@@ -23,20 +23,28 @@ class IkObject
         let chainObjects = [];
         chainObjects.push(new ChainObject("RightShoulder", "RightHand", movingTarget[0]));
         chainObjects.push(new ChainObject("LeftShoulder", "LeftHand", movingTarget[1]));
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget[2]));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget[3]));
-
-        // Setting up objects Constraints
-        for(let i = 0; i < 4; i++)
+        for(let i = 0; i < 2; i++)
         {
             chainObjects[i].setConstraints(
-                [new IKHingeConstraint(180)],
+                [new IKBallConstraint(0)],
                 [new IKHingeConstraint(180)],
                 [new IKHingeConstraint(180)],
                 [new IKHingeConstraint(180)],
                 [new IKHingeConstraint(180)],
                 [new IKBallConstraint(35)]);
         }
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget[2]));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget[3]));
+        for(let i = 2; i < 4; i++)
+        {
+            chainObjects[i].setConstraints(
+                [new IKHingeConstraint(180)],
+                [new IKHingeConstraint(180)],
+                [new IKBallConstraint(0)],
+                [new IKBallConstraint(0)]);
+        }
+        // Setting up objects Constraints
+
         // Goes through all scene objects
         scene.traverse((object) =>
         {
