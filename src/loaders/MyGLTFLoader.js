@@ -18,7 +18,6 @@ class MyGLTFLoader
             // Called when the resource is loaded
             ( gltf ) =>
             {
-                console.log(gltf );
                 gltf.scene.children[0].position.set(0, 0,0 );
                 scene.add( gltf.scene );
                 gltf.scene.children[0].updateMatrixWorld();

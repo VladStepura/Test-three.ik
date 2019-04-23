@@ -64,8 +64,6 @@ class App
         const gltfLoader = new MyGLTFLoader();
         gltfLoader.loaded = (gltf) =>
         {
-            console.log(gltf.scene)
-
             loadedObject = new IkObject();
             loadedObject.initObject(gltf.scene, rightHandMovingTarget, leftHandMovingTarget, leftLegMovingTarget, rightLegMovingTarget, backMovingTarget);
             this.iKObjects.push(loadedObject);
@@ -77,16 +75,12 @@ class App
     //#region Render loop
     render()
     {
+        //
         this.iKObjects.forEach((ikObject) =>
         {
             ikObject.update();
             ikObject.ik.solve();
         });
-        // if (this.iKObjects[0]) {
-        //     console.log(this.iKObjects[0]['rigMesh'].skeleton.bones[57].rotation)
-        //    // this.iKObjects[0]['rigMesh'].skeleton.bones[57].rotation.z = 0
-        // }
-
         this.renderer.render(this.scene, this.camera);
 
         requestAnimationFrame(() => this.render());
@@ -100,7 +94,6 @@ class App
         control.size = 0.5
         control.addEventListener('dragging-changed', ( event ) =>
         {
-            console.log(this.iKObjects)
             this.orbit.enabled = ! event.value;
         });
         control.attach(target);

@@ -14,16 +14,12 @@ class IkObject
     // Takes skeleton and target for it;s limbs
     initObject(scene, ...movingTarget)
     {
-        console.log(scene)
         this.ik = new IK();
         let chains = [];
-        let joints = {};
         let rigMesh = scene.children[1];
         let skeleton = null;
         this.rigMesh = rigMesh;
-
         let chainObjects = [];
-
 
         chainObjects.push(new ChainObject("RightArm", "RightHand", movingTarget[0]));
         chainObjects.push(new ChainObject("LeftArm", "LeftHand", movingTarget[1]));
@@ -31,8 +27,6 @@ class IkObject
         chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", movingTarget[3]));
 
         chainObjects.push(new ChainObject("Spine", "Neck", movingTarget[4]));
-
-        // Setting up objects Constraints
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -52,7 +46,6 @@ class IkObject
                     }
                     skeleton = parent;
                 }
-
                 // Flips a model's forward from -Z to +Z
                 // By default Models axis is -Z while Three ik works with +Z
                 if(object.name === "Hips")
