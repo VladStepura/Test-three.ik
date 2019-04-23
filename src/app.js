@@ -75,9 +75,11 @@ class App
     //#region Render loop
     render()
     {
-        //
+        // Goes through all ik objects, update them and solve their ik
         this.iKObjects.forEach((ikObject) =>
         {
+            // Object updates before it's ik solved in order to set pole target
+            // This will fix issues this weird angles
             ikObject.update();
             ikObject.ik.solve();
         });

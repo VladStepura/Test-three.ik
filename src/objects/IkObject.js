@@ -103,7 +103,8 @@ class IkObject
         // Adds skeleton helper to scene
         scene.add( skeletonHelper );
     }
-
+    // Updates chains
+    // Only done this left limbs in order to see difference
     update()
     {
         let leftArmChain = this.ik.chains[2];
