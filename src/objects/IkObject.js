@@ -14,35 +14,24 @@ class IkObject
     // Takes skeleton and target for it;s limbs
     initObject(scene, ...movingTarget)
     {
+        console.log(scene)
         this.ik = new IK();
         let chains = [];
-        let rigMesh = scene.children[0].children[1];
+        let joints = {};
+        let rigMesh = scene.children[1];
         let skeleton = null;
         this.rigMesh = rigMesh;
 
         let chainObjects = [];
-        chainObjects.push(new ChainObject("RightShoulder", "RightHand", movingTarget[0]));
-        chainObjects.push(new ChainObject("LeftShoulder", "LeftHand", movingTarget[1]));
-        for(let i = 0; i < 2; i++)
-        {
-            chainObjects[i].setConstraints(
-                [new IKBallConstraint(0)],
-                [new IKHingeConstraint(180)],
-                [new IKHingeConstraint(180)],
-                [new IKHingeConstraint(180)],
-                [new IKHingeConstraint(180)],
-                [new IKBallConstraint(35)]);
-        }
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftToeBase", movingTarget[2]));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightToeBase", movingTarget[3]));
-        for(let i = 2; i < 4; i++)
-        {
-            chainObjects[i].setConstraints(
-                [new IKHingeConstraint(180)],
-                [new IKHingeConstraint(180)],
-                [new IKBallConstraint(0)],
-                [new IKBallConstraint(0)]);
-        }
+
+
+        chainObjects.push(new ChainObject("RightArm", "RightHand", movingTarget[0]));
+        chainObjects.push(new ChainObject("LeftArm", "LeftHand", movingTarget[1]));
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", movingTarget[2]));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", movingTarget[3]));
+
+        chainObjects.push(new ChainObject("Spine", "Neck", movingTarget[4]));
+
         // Setting up objects Constraints
 
         // Goes through all scene objects
@@ -63,6 +52,7 @@ class IkObject
                     }
                     skeleton = parent;
                 }
+
                 // Flips a model's forward from -Z to +Z
                 // By default Models axis is -Z while Three ik works with +Z
                 if(object.name === "Hips")
@@ -94,12 +84,15 @@ class IkObject
                         if(object.name === chainObject.lastObjectName)
                         {
                             target = chainObject.movingTarget;
+                            object.getWorldPosition(chainObject.movingTarget.position)
+
                             chainObject.isChainObjectStarted = false
                         }
                         // Creates joint by passing current bone and its constraint
                         let joint = new IKJoint(object, {constraints});
                         // Adds joint to chain and sets target
                         chain.add(joint, {target});
+
                     }
                 });
             }
@@ -116,6 +109,27 @@ class IkObject
         skeletonHelper.material.linewidth = 3;
         // Adds skeleton helper to scene
         scene.add( skeletonHelper );
+    }
+
+    update()
+    {
+        let leftArmChain = this.ik.chains[2];
+        let leftArmPoleTarget = new THREE.Vector3( -90, 45, -90);
+
+        let leftLegChain = this.ik.chains[4];
+        let leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
+
+        this.chainRotate(leftArmChain, leftArmPoleTarget);
+        this.chainRotate(leftLegChain, leftLegPoleTarget);
+    }
+
+    // Rotates whole chain towards position
+    chainRotate(chain, poleTarget)
+    {
+        chain.joints.forEach((joint) =>
+        {
+            joint.bone.lookAt(poleTarget);
+        });
     }
 
 }

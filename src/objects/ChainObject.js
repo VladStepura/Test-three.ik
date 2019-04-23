@@ -10,14 +10,13 @@ class ChainObject
     {
         this.movingTarget = movingTarget;
         this.chain = new IKChain();
-
         this.isChainObjectStarted = false;
         this.baseObjectName = baseObjectName;
         this.lastObjectName = lastObjectName;
         this.rootJointName = rootJointName;
         this.currentJoint = 0;
         this.constraints = [];
-        this.defaultConstraint = [new IKHingeConstraint(180)];
+        //this.defaultConstraint = [new IKHingeConstraint(90)];
     }
 
     // Takes constraint for current joint

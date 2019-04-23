@@ -503,6 +503,8 @@ var IKJoint = function () {
         this._updateMatrixWorld();
         this._worldToLocalDirection(direction);
         setQuaternionFromDirection(direction, Y_AXIS, this.bone.quaternion);
+        this.bone.rotation.z = 0
+
       } else {
         this.bone.position.copy(position);
       }
@@ -827,7 +829,7 @@ var IK = function () {
               break;
             }
             iterations--;
-            
+
           }
         }
       } catch (err) {
