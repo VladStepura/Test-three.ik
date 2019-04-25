@@ -9,6 +9,7 @@ class IkObject
     constructor()
     {
         this.applyingOffset = false;
+        this.magicNumberToMoveObject = 1;
     }
 
     // Takes skeleton and target for it;s limbs
@@ -23,6 +24,7 @@ class IkObject
         let chainObjects = [];
         this.chainObjects = chainObjects;
         this.hipsControlTarget = controlTarget[5];
+        this.hipsControlTarget.target.position.z += this.magicNumberToMoveObject;
 
         chainObjects.push(new ChainObject("RightArm", "RightHand", controlTarget[0]));
         chainObjects.push(new ChainObject("LeftArm", "LeftHand", controlTarget[1]));
@@ -62,7 +64,6 @@ class IkObject
                     this.hips = object;
                     setZForward(object);
                     rigMesh.bind(rigMesh.skeleton);
-                    skeleton.position.z += 2;
                     console.log(skeleton);
                     //object.position.z += 2;
                 }
@@ -92,7 +93,7 @@ class IkObject
                         {
                             target = chainObject.controlTarget.target;
                             object.getWorldPosition(target.position)
-
+                            target.position.z += this.magicNumberToMoveObject;
                             chainObject.isChainObjectStarted = false
                         }
                         // Creates joint by passing current bone and its constraint
