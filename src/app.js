@@ -3,6 +3,7 @@ import {OrbitControls} from "./utils/OrbitControls";
 import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import IkObject from "./objects/IkObject";
 import {TransformControls} from "./utils/TransformControls";
+import TargetControl from "./objects/TargetControl";
 
 // App is main class which initialises all object and goes through rendering cycle
 class App
@@ -38,26 +39,20 @@ class App
         this.renderer = renderer;
         this.scene = scene;
 
-        //#region Moving targets
-        const rightHandMovingTarget = this.CreateMovingTarget(new THREE.Vector3(-2, 1.5, 0));
-        const leftHandMovingTarget = this.CreateMovingTarget(new THREE.Vector3(2, 1.5, 0));
-        const leftLegMovingTarget = this.CreateMovingTarget(new THREE.Vector3(2, -1.5, 0));
-        const rightLegMovingTarget = this.CreateMovingTarget(new THREE.Vector3(-2, -1.5, 0));
-        const backMovingTarget = this.CreateMovingTarget(new THREE.Vector3(0, 1, -.1));
-        //#endregion
-
         //#region Controls
         this.orbit = new OrbitControls( camera, renderer.domElement );
         this.orbit.target = new THREE.Vector3(0,1,0)
         this.orbit.update()
-
-        this.AddTransformationControl(rightHandMovingTarget);
-        this.AddTransformationControl(leftHandMovingTarget);
-        this.AddTransformationControl(leftLegMovingTarget);
-        this.AddTransformationControl(rightLegMovingTarget);
-        this.AddTransformationControl(backMovingTarget);
         //#endregion
 
+        //#region Moving targets
+        const rightHandControl = this.AddTransformationControl(new THREE.Vector3(-2, 1.5, 0));
+        const leftHandControl = this.AddTransformationControl(new THREE.Vector3(2, 1.5, 0));
+        const leftLegControl = this.AddTransformationControl(new THREE.Vector3(2, -1.5, 0));
+        const rightLegControl = this.AddTransformationControl(new THREE.Vector3(-2, -1.5, 0));
+        const backControl = this.AddTransformationControl(new THREE.Vector3(0, 1, -.1));
+        const hipsControl = this.AddTransformationControl(new THREE.Vector3(0, 1, 0));
+        //#endregion
 
         //#region Loader
         let loadedObject = {};
@@ -65,7 +60,9 @@ class App
         gltfLoader.loaded = (gltf) =>
         {
             loadedObject = new IkObject();
-            loadedObject.initObject(gltf.scene, rightHandMovingTarget, leftHandMovingTarget, leftLegMovingTarget, rightLegMovingTarget, backMovingTarget);
+            loadedObject.initObject(gltf.scene, rightHandControl, leftHandControl,
+                                    leftLegControl, rightLegControl, backControl,
+                                    hipsControl);
             this.iKObjects.push(loadedObject);
         }
         gltfLoader.loadToScene('./assets/male-adult-testforik.glb', scene);
@@ -82,6 +79,7 @@ class App
             // This will fix issues this weird angles
             ikObject.update();
             ikObject.ik.solve();
+            ikObject.lateUpdate();
         });
         this.renderer.render(this.scene, this.camera);
 
@@ -90,27 +88,13 @@ class App
     //#endregion
 
     //#region Add ControlTransformation
-    AddTransformationControl(target)
+    AddTransformationControl(position)
     {
-        let control = new TransformControls( this.camera, this.renderer.domElement );
-        control.size = 0.5
-        control.addEventListener('dragging-changed', ( event ) =>
-        {
-            this.orbit.enabled = ! event.value;
-        });
-        control.attach(target);
-        this.scene.add(control);
+        let targetControl = new TargetControl(this.camera, this.renderer.domElement, this.orbit);
+        targetControl.initialize(position, this.scene);
+        return targetControl;
     }
 
-    CreateMovingTarget(position)
-    {
-        const movingTarget = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.4 }));
-        movingTarget.position.z = position.z;
-        movingTarget.position.y = position.y;;
-        movingTarget.position.x = position.x;
-        this.scene.add(movingTarget);
-        return movingTarget;
-    }
     //#endregion
 }
 export default App;

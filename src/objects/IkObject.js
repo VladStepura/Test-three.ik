@@ -8,7 +8,6 @@ class IkObject
 {
     constructor()
     {
-
     }
 
     // Takes skeleton and target for it;s limbs
@@ -19,14 +18,18 @@ class IkObject
         let rigMesh = scene.children[1];
         let skeleton = null;
         this.rigMesh = rigMesh;
+        console.log(rigMesh);
         let chainObjects = [];
+        this.chainObjects = chainObjects;
+        this.hipsTarget = movingTarget[5].target;
 
-        chainObjects.push(new ChainObject("RightArm", "RightHand", movingTarget[0]));
-        chainObjects.push(new ChainObject("LeftArm", "LeftHand", movingTarget[1]));
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", movingTarget[2]));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", movingTarget[3]));
+        console.log(this.backOffset);
+        chainObjects.push(new ChainObject("RightArm", "RightHand", movingTarget[0].target));
+        chainObjects.push(new ChainObject("LeftArm", "LeftHand", movingTarget[1].target));
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", movingTarget[2].target));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", movingTarget[3].target));
 
-        chainObjects.push(new ChainObject("Spine", "Neck", movingTarget[4]));
+        chainObjects.push(new ChainObject("Spine", "Neck", movingTarget[4].target));
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -50,6 +53,7 @@ class IkObject
                 // By default Models axis is -Z while Three ik works with +Z
                 if(object.name === "Hips")
                 {
+                    this.hips = object;
                     setZForward(object);
                     rigMesh.bind(rigMesh.skeleton);
                 }
@@ -107,14 +111,57 @@ class IkObject
     // Only done this left limbs in order to see difference
     update()
     {
+        let backPosition = this.chainObjects[4].movingTarget.position.clone();
+        this.backOffset = backPosition.sub(this.hipsTarget.position);
+        console.log(this.backOffset.y);
+        let backChain = this.ik.chains[0];
+        let backPoleTarget = new THREE.Vector3( 0, 0, 0);
+
+        let rightArmChain = this.ik.chains[1];
+        let rightArmPoleTarget = new THREE.Vector3( 90, 45, -90);
+
         let leftArmChain = this.ik.chains[2];
         let leftArmPoleTarget = new THREE.Vector3( -90, 45, -90);
 
-        let leftLegChain = this.ik.chains[4];
+        let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
 
+        let rightLegChain = this.ik.chains[4];
+        let rightLegPoleTarget = new THREE.Vector3( 0, 45, 90);
+
+        this.chainRotate(backChain, backPoleTarget);
         this.chainRotate(leftArmChain, leftArmPoleTarget);
+        this.chainRotate(rightArmChain, rightArmPoleTarget);
         this.chainRotate(leftLegChain, leftLegPoleTarget);
+        this.chainRotate(rightLegChain, rightLegPoleTarget);
+
+
+    }
+
+    lateUpdate()
+    {
+        let rightFootBone = this.ik.chains[4].joints[2].bone;
+        let rightLegChainTarget = this.chainObjects[3].movingTarget;
+        rightFootBone.rotation.x = rightLegChainTarget.rotation.x;
+        rightFootBone.rotation.y = rightLegChainTarget.rotation.y;
+        rightFootBone.rotation.z = rightLegChainTarget.rotation.z;
+      //  let target = rightLegChainTarget.clone();
+       // target.position.x *= -1;
+     //   target.position.y *= -1;
+        //target.position.z = 0;
+
+      //  rightFootBone.lookAt(target.position);
+      //  console.log(rightFootBone);
+       // let backChain = this.ik.chains[0];
+        //let backBone = backChain.joints[0].bone;
+       // .lookAt(this.hipsTarget.position);
+        let backTarget = this.chainObjects[4].movingTarget;
+        let hipsPosition = this.hipsTarget.position.clone();
+        backTarget.position.copy(hipsPosition.add(this.backOffset));
+
+        this.hips.position.x = this.hipsTarget.position.x;
+        this.hips.position.y = this.hipsTarget.position.y;
+        this.hips.position.z = this.hipsTarget.position.z;
     }
 
     // Rotates whole chain towards position
