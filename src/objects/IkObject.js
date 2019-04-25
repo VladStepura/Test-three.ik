@@ -2,6 +2,7 @@ import {IK, IKBallConstraint, IKChain, IKHelper, IKHingeConstraint, IKJoint} fro
 import * as THREE from "three";
 import setZForward from "../utils/axisUtils";
 import ChainObject from "./ChainObject";
+import Gui from "./Gui";
 
 // IKObject is class which applies ik onto skeleton
 class IkObject
@@ -35,6 +36,9 @@ class IkObject
 
         // Adds events to Back control
         this.applyEventsToBackControl(controlTarget[4].control);
+
+        // Adds gui elements to control objects
+        this.addGuiElements();
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -145,6 +149,17 @@ class IkObject
         this.backOffset = backPosition.sub(this.hipsControlTarget.target.position);
     }
 
+    addGuiElements()
+    {
+        let gui = new Gui();
+        let rightLegTarget = this.chainObjects[3].controlTarget.target;
+        let leftLegTarget = this.chainObjects[2].controlTarget.target;
+        gui.addVectorSlider(rightLegTarget.rotation, "Right target rotation",
+            -Math.PI * 1, Math.PI * 1);
+        gui.addVectorSlider(leftLegTarget.rotation, "Left target rotation",
+            -Math.PI * 1, Math.PI * 1);
+    }
+
     // Updates chains
     // Only done this left limbs in order to see difference
     update()
@@ -174,12 +189,7 @@ class IkObject
     // Updates which is called last after all stuff in loop has been done
     lateUpdate()
     {
-        // Makes right fool follow the rotation of target
-        let rightFootBone = this.ik.chains[4].joints[2].bone;
-        let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
-        rightFootBone.rotation.x = rightLegChainTarget.rotation.x;
-        rightFootBone.rotation.y = rightLegChainTarget.rotation.y;
-        rightFootBone.rotation.z = rightLegChainTarget.rotation.z;
+        this.legsFollowTargetRotation();
 
         let hipsTarget = this.hipsControlTarget.target;
         // Sets back position when offset is not changing
@@ -194,6 +204,19 @@ class IkObject
         this.hips.position.x = hipsTarget.position.x;
         this.hips.position.y = hipsTarget.position.y;
         this.hips.position.z = hipsTarget.position.z;
+    }
+
+    legsFollowTargetRotation()
+    {
+        // Makes right foot follow the rotation of target
+        let rightFootBone = this.ik.chains[4].joints[2].bone;
+        let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
+        rightFootBone.rotation.copy(rightLegChainTarget.rotation);
+
+        // Makes right foot follow the rotation of target
+        let leftFootBone = this.ik.chains[3].joints[2].bone;
+        let leftLegChainTarget = this.chainObjects[2].controlTarget.target;
+        leftFootBone.rotation.copy(leftLegChainTarget.rotation);
     }
 
     // Rotates whole chain towards position
