@@ -8,28 +8,31 @@ class IkObject
 {
     constructor()
     {
+        this.applyingOffset = false;
     }
 
     // Takes skeleton and target for it;s limbs
-    initObject(scene, ...movingTarget)
+    initObject(scene, ...controlTarget)
     {
         this.ik = new IK();
         let chains = [];
         let rigMesh = scene.children[1];
         let skeleton = null;
         this.rigMesh = rigMesh;
-        console.log(rigMesh);
+
         let chainObjects = [];
         this.chainObjects = chainObjects;
-        this.hipsTarget = movingTarget[5].target;
+        this.hipsControlTarget = controlTarget[5];
 
-        console.log(this.backOffset);
-        chainObjects.push(new ChainObject("RightArm", "RightHand", movingTarget[0].target));
-        chainObjects.push(new ChainObject("LeftArm", "LeftHand", movingTarget[1].target));
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", movingTarget[2].target));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", movingTarget[3].target));
+        chainObjects.push(new ChainObject("RightArm", "RightHand", controlTarget[0]));
+        chainObjects.push(new ChainObject("LeftArm", "LeftHand", controlTarget[1]));
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", controlTarget[2]));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", controlTarget[3]));
 
-        chainObjects.push(new ChainObject("Spine", "Neck", movingTarget[4].target));
+        chainObjects.push(new ChainObject("Spine", "Neck", controlTarget[4]));
+
+        // Adds events to Back control
+        this.applyEventsToBackControl(controlTarget[4].control);
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -37,6 +40,7 @@ class IkObject
             // Searches only bones object
             if(object instanceof THREE.Bone)
             {
+
                 // Finds skeleton for skeletonHelper
                 if(skeleton === null)
                 {
@@ -48,6 +52,8 @@ class IkObject
                         parent = parent.parent;
                     }
                     skeleton = parent;
+
+                   // skeleton.updateMatrixWorld(true);
                 }
                 // Flips a model's forward from -Z to +Z
                 // By default Models axis is -Z while Three ik works with +Z
@@ -56,7 +62,11 @@ class IkObject
                     this.hips = object;
                     setZForward(object);
                     rigMesh.bind(rigMesh.skeleton);
+                    skeleton.position.z += 2;
+                    console.log(skeleton);
+                    //object.position.z += 2;
                 }
+
                 // Goes through all chain objects to find with which we are working
                 chainObjects.forEach((chainObject) =>
                 {
@@ -80,8 +90,8 @@ class IkObject
                         // Checks if object is last
                         if(object.name === chainObject.lastObjectName)
                         {
-                            target = chainObject.movingTarget;
-                            object.getWorldPosition(chainObject.movingTarget.position)
+                            target = chainObject.controlTarget.target;
+                            object.getWorldPosition(target.position)
 
                             chainObject.isChainObjectStarted = false
                         }
@@ -106,22 +116,46 @@ class IkObject
         skeletonHelper.material.linewidth = 3;
         // Adds skeleton helper to scene
         scene.add( skeletonHelper );
+        this.calculteBackOffset();
     }
+
+    applyEventsToBackControl(backControl)
+    {
+        backControl.addEventListener("mouseDown", (event) =>
+        {
+            this.applyingOffset = true;
+        });
+        backControl.addEventListener("dragging-changed", (event) =>
+        {
+            this.calculteBackOffset();
+        });
+        backControl.addEventListener("mouseUp", (event) =>
+        {
+            this.applyingOffset = false;
+        });
+    }
+
+    // Calculates back's offset in order to move with hips
+    calculteBackOffset()
+    {
+        let backPosition = this.chainObjects[4].controlTarget.target.position.clone();
+        let hipsPosition = this.hipsControlTarget.target.position.clone();
+
+        this.backOffset = backPosition.sub(this.hipsControlTarget.target.position);
+    }
+
     // Updates chains
     // Only done this left limbs in order to see difference
     update()
     {
-        let backPosition = this.chainObjects[4].movingTarget.position.clone();
-        this.backOffset = backPosition.sub(this.hipsTarget.position);
-        console.log(this.backOffset.y);
         let backChain = this.ik.chains[0];
         let backPoleTarget = new THREE.Vector3( 0, 0, 0);
 
         let rightArmChain = this.ik.chains[1];
-        let rightArmPoleTarget = new THREE.Vector3( 90, 45, -90);
+        let rightArmPoleTarget = new THREE.Vector3( 10, 10, 1);
 
         let leftArmChain = this.ik.chains[2];
-        let leftArmPoleTarget = new THREE.Vector3( -90, 45, -90);
+        let leftArmPoleTarget = new THREE.Vector3( -10, 10, 1);
 
         let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
@@ -134,34 +168,31 @@ class IkObject
         this.chainRotate(rightArmChain, rightArmPoleTarget);
         this.chainRotate(leftLegChain, leftLegPoleTarget);
         this.chainRotate(rightLegChain, rightLegPoleTarget);
-
-
     }
 
+    // Updates which is called last after all stuff in loop has been done
     lateUpdate()
     {
+        // Makes right fool follow the rotation of target
         let rightFootBone = this.ik.chains[4].joints[2].bone;
-        let rightLegChainTarget = this.chainObjects[3].movingTarget;
+        let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
         rightFootBone.rotation.x = rightLegChainTarget.rotation.x;
         rightFootBone.rotation.y = rightLegChainTarget.rotation.y;
         rightFootBone.rotation.z = rightLegChainTarget.rotation.z;
-      //  let target = rightLegChainTarget.clone();
-       // target.position.x *= -1;
-     //   target.position.y *= -1;
-        //target.position.z = 0;
 
-      //  rightFootBone.lookAt(target.position);
-      //  console.log(rightFootBone);
-       // let backChain = this.ik.chains[0];
-        //let backBone = backChain.joints[0].bone;
-       // .lookAt(this.hipsTarget.position);
-        let backTarget = this.chainObjects[4].movingTarget;
-        let hipsPosition = this.hipsTarget.position.clone();
-        backTarget.position.copy(hipsPosition.add(this.backOffset));
-
-        this.hips.position.x = this.hipsTarget.position.x;
-        this.hips.position.y = this.hipsTarget.position.y;
-        this.hips.position.z = this.hipsTarget.position.z;
+        let hipsTarget = this.hipsControlTarget.target;
+        // Sets back position when offset is not changing
+        if(!this.applyingOffset)
+        {
+            let backTarget = this.chainObjects[4].controlTarget.target;
+            let hipsPosition = hipsTarget.position.clone();
+            let result = hipsPosition.add(this.backOffset);
+            backTarget.position.copy(result);
+        }
+        // Follows hips target
+        this.hips.position.x = hipsTarget.position.x;
+        this.hips.position.y = hipsTarget.position.y;
+        this.hips.position.z = hipsTarget.position.z;
     }
 
     // Rotates whole chain towards position
@@ -172,6 +203,5 @@ class IkObject
             joint.bone.lookAt(poleTarget);
         });
     }
-
 }
 export default IkObject;

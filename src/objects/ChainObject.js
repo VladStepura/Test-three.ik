@@ -8,7 +8,7 @@ class ChainObject
 
     constructor(baseObjectName, lastObjectName, movingTarget = null, rootJointName = null)
     {
-        this.movingTarget = movingTarget;
+        this.controlTarget = movingTarget;
         this.chain = new IKChain();
         this.isChainObjectStarted = false;
         this.baseObjectName = baseObjectName;
