@@ -32,7 +32,7 @@ class IkObject
         chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", controlTarget[2]));
         chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", controlTarget[3]));
 
-        chainObjects.push(new ChainObject("Spine", "Neck", controlTarget[4]));
+        chainObjects.push(new ChainObject("Spine", "Head", controlTarget[4]));
 
         // Adds events to Back control
         this.applyEventsToBackControl(controlTarget[4].control);
@@ -132,6 +132,7 @@ class IkObject
         });
         backControl.addEventListener("dragging-changed", (event) =>
         {
+
             this.calculteBackOffset();
         });
         backControl.addEventListener("mouseUp", (event) =>
@@ -168,10 +169,10 @@ class IkObject
         let backPoleTarget = new THREE.Vector3( 0, 0, 0);
 
         let rightArmChain = this.ik.chains[1];
-        let rightArmPoleTarget = new THREE.Vector3( 10, 10, 1);
+        let rightArmPoleTarget = new THREE.Vector3( -90, 45, -90);
 
         let leftArmChain = this.ik.chains[2];
-        let leftArmPoleTarget = new THREE.Vector3( -10, 10, 1);
+        let leftArmPoleTarget = new THREE.Vector3( 90, 45, -90);
 
         let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
