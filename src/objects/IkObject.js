@@ -130,7 +130,7 @@ class IkObject
         scene.add( skeletonHelper );
         this.calculteBackOffset();
     }
-
+    // Sets pole targets position
     initializePoleTarget()
     {
         this.poleTargets.backPoleTarget = new THREE.Vector3( 0, 0, 0);
@@ -139,7 +139,7 @@ class IkObject
         this.poleTargets.leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
         this.poleTargets.rightLegPoleTarget = new THREE.Vector3( 0, 45, 90);
     }
-
+    // Applies events to back control
     applyEventsToBackControl(backControl)
     {
         backControl.addEventListener("mouseDown", (event) =>
@@ -150,25 +150,12 @@ class IkObject
         {
             if(this.enableIk)
             {
-                console.log("Spine");
-                console.log(this.chainObjects[4].chain.joints[0].bone);
-                console.log("Head");
-                console.log(this.chainObjects[4].chain.joints[4].bone);
-
                 let spineRotation = this.chainObjects[4].chain.joints[0].bone.rotation.clone();
                 this.headRotation = this.chainObjects[4].chain.joints[4].bone.rotation.clone();
                 this.neckRotaion = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
-              //  this.headRotation.x = -spineRotation.x;
-               // this.headRotation.x = -spineRotation.x * 0.5;
                 this.headRotation.y = -spineRotation.y * 0.5;
-
-            //    this.neckRotaion.x = spineRotation.x * 0.1;
                 this.neckRotaion.y = -spineRotation.y * 0.5;
             }
-            //this.headRotation.z = -spineRotation.z;
-           // this.headRotation.w = -spineRotation.w;
-
-
         });
         backControl.addEventListener("dragging-changed", (event) =>
         {
@@ -188,7 +175,8 @@ class IkObject
 
         this.backOffset = backPosition.sub(this.hipsControlTarget.target.position);
     }
-
+    // Adds gui elements to scene
+    // With adding its parameters
     addGuiElements()
     {
         let gui = new Gui();
@@ -214,12 +202,15 @@ class IkObject
     {
         if(this.enableIk)
         {
+            // Pole target needs to be applied before ik
+            // in order to changer figure parameters
             this.setPoleTargets();
-            this.solve();
+            // Solves the inverse kinematic of object
+            this.ik.solve();
         }
         this.lateUpdate();
     }
-
+    // Applies pole target to models
     setPoleTargets()
     {
         let backChain = this.ik.chains[0];
@@ -244,11 +235,7 @@ class IkObject
         this.chainRotate(rightLegChain, rightLegPoleTarget);
     }
 
-    solve()
-    {
-        this.ik.solve();
-    }
-
+    // Recalculates positions of transform controls
     recalculate()
     {
         let leftHand = this.chainObjects[1].chain.joints[2].bone;
@@ -284,6 +271,8 @@ class IkObject
     }
 
     // Updates which is called last after all stuff in loop has been done
+    // Fires after ik solver in order to apply custom changes to models
+    // Ik solver overrides all changes if applied before it's fired
     lateUpdate()
     {
         this.legsFollowTargetRotation();
@@ -299,7 +288,7 @@ class IkObject
         }
         // Follows hips target
         this.hips.position.copy(hipsTarget.position);
-
+        // Cause ik solver is overriding any changes to rotation need to be applied in late update
         this.applyHeadRotation();
     }
 
@@ -316,6 +305,7 @@ class IkObject
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
     }
 
+    // Applies head rotation
     applyHeadRotation()
     {
         if(this.headRotation)

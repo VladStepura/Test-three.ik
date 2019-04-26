@@ -11,7 +11,7 @@ class Gui
         }
         return Gui.instance;
     }
-
+    // Creates slider of vector with min and max values
     addVectorSlider(vector, name, min, max)
     {
         let folder = this.datGui.addFolder(name);
