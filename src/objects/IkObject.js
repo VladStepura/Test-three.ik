@@ -11,6 +11,11 @@ class IkObject
     {
         this.applyingOffset = false;
         this.magicNumberToMoveObject = 1;
+        this.poleTargets = {};
+        this.headRotation = null;
+        this.neckRotaion = null;
+        this.enableIk = true;
+        this.needsRecalculation = false;
     }
 
     // Takes skeleton and target for it;s limbs
@@ -26,6 +31,8 @@ class IkObject
         this.chainObjects = chainObjects;
         this.hipsControlTarget = controlTarget[5];
         this.hipsControlTarget.target.position.z += this.magicNumberToMoveObject;
+
+        this.initializePoleTarget();
 
         chainObjects.push(new ChainObject("RightArm", "RightHand", controlTarget[0]));
         chainObjects.push(new ChainObject("LeftArm", "LeftHand", controlTarget[1]));
@@ -124,15 +131,47 @@ class IkObject
         this.calculteBackOffset();
     }
 
+    initializePoleTarget()
+    {
+        this.poleTargets.backPoleTarget = new THREE.Vector3( 0, 0, 0);
+        this.poleTargets.rightArmPoleTarget = new THREE.Vector3( -90, 45, -90);
+        this.poleTargets.leftArmPoleTarget = new THREE.Vector3( 90, 45, -90);
+        this.poleTargets.leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
+        this.poleTargets.rightLegPoleTarget = new THREE.Vector3( 0, 45, 90);
+    }
+
     applyEventsToBackControl(backControl)
     {
         backControl.addEventListener("mouseDown", (event) =>
         {
             this.applyingOffset = true;
         });
+        backControl.addEventListener("change", (event) =>
+        {
+            if(this.enableIk)
+            {
+                console.log("Spine");
+                console.log(this.chainObjects[4].chain.joints[0].bone);
+                console.log("Head");
+                console.log(this.chainObjects[4].chain.joints[4].bone);
+
+                let spineRotation = this.chainObjects[4].chain.joints[0].bone.rotation.clone();
+                this.headRotation = this.chainObjects[4].chain.joints[4].bone.rotation.clone();
+                this.neckRotaion = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
+              //  this.headRotation.x = -spineRotation.x;
+               // this.headRotation.x = -spineRotation.x * 0.5;
+                this.headRotation.y = -spineRotation.y * 0.5;
+
+            //    this.neckRotaion.x = spineRotation.x * 0.1;
+                this.neckRotaion.y = -spineRotation.y * 0.5;
+            }
+            //this.headRotation.z = -spineRotation.z;
+           // this.headRotation.w = -spineRotation.w;
+
+
+        });
         backControl.addEventListener("dragging-changed", (event) =>
         {
-
             this.calculteBackOffset();
         });
         backControl.addEventListener("mouseUp", (event) =>
@@ -159,32 +198,89 @@ class IkObject
             -Math.PI * 1, Math.PI * 1);
         gui.addVectorSlider(leftLegTarget.rotation, "Left target rotation",
             -Math.PI * 1, Math.PI * 1);
+        gui.datGui.add(this, "enableIk").onChange(() =>
+            {
+                if(this.enableIk)
+                {
+                    this.recalculate();
+                }
+            });
+        gui.datGui.open();
     }
 
     // Updates chains
     // Only done this left limbs in order to see difference
     update()
     {
+        if(this.enableIk)
+        {
+            this.setPoleTargets();
+            this.solve();
+        }
+        this.lateUpdate();
+    }
+
+    setPoleTargets()
+    {
         let backChain = this.ik.chains[0];
-        let backPoleTarget = new THREE.Vector3( 0, 0, 0);
+        let backPoleTarget = this.poleTargets.backPoleTarget;
 
         let rightArmChain = this.ik.chains[1];
-        let rightArmPoleTarget = new THREE.Vector3( -90, 45, -90);
+        let rightArmPoleTarget = this.poleTargets.rightArmPoleTarget;
 
         let leftArmChain = this.ik.chains[2];
-        let leftArmPoleTarget = new THREE.Vector3( 90, 45, -90);
+        let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
 
         let leftLegChain = this.ik.chains[3];
-        let leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
+        let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
 
         let rightLegChain = this.ik.chains[4];
-        let rightLegPoleTarget = new THREE.Vector3( 0, 45, 90);
+        let rightLegPoleTarget = this.poleTargets.rightLegPoleTarget;
 
         this.chainRotate(backChain, backPoleTarget);
         this.chainRotate(leftArmChain, leftArmPoleTarget);
         this.chainRotate(rightArmChain, rightArmPoleTarget);
         this.chainRotate(leftLegChain, leftLegPoleTarget);
         this.chainRotate(rightLegChain, rightLegPoleTarget);
+    }
+
+    solve()
+    {
+        this.ik.solve();
+    }
+
+    recalculate()
+    {
+        let leftHand = this.chainObjects[1].chain.joints[2].bone;
+        let leftHandTarget = this.chainObjects[1].controlTarget.target;
+
+        let rightHand = this.chainObjects[0].chain.joints[2].bone;
+        let rightHandTarget = this.chainObjects[0].controlTarget.target;
+
+        let leftLeg = this.chainObjects[2].chain.joints[2].bone;
+        let leftLegTarget = this.chainObjects[2].controlTarget.target;
+
+        let rightLeg = this.chainObjects[3].chain.joints[2].bone;
+        let rightLegTarget = this.chainObjects[3].controlTarget.target;
+
+        let back = this.chainObjects[4].chain.joints[4].bone;
+        let backTarget = this.chainObjects[4].controlTarget.target;
+
+        leftHand.getWorldPosition(leftHandTarget.position);
+        rightHand.getWorldPosition(rightHandTarget.position);
+        leftLeg.getWorldPosition(leftLegTarget.position);
+        rightLeg.getWorldPosition(rightLegTarget.position);
+        back.getWorldPosition(backTarget.position);
+        this.calculteBackOffset();
+    }
+
+    // Rotates whole chain towards position
+    chainRotate(chain, poleTarget)
+    {
+        chain.joints.forEach((joint) =>
+        {
+            joint.bone.lookAt(poleTarget);
+        });
     }
 
     // Updates which is called last after all stuff in loop has been done
@@ -202,9 +298,9 @@ class IkObject
             backTarget.position.copy(result);
         }
         // Follows hips target
-        this.hips.position.x = hipsTarget.position.x;
-        this.hips.position.y = hipsTarget.position.y;
-        this.hips.position.z = hipsTarget.position.z;
+        this.hips.position.copy(hipsTarget.position);
+
+        this.applyHeadRotation();
     }
 
     legsFollowTargetRotation()
@@ -220,13 +316,13 @@ class IkObject
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
     }
 
-    // Rotates whole chain towards position
-    chainRotate(chain, poleTarget)
+    applyHeadRotation()
     {
-        chain.joints.forEach((joint) =>
+        if(this.headRotation)
         {
-            joint.bone.lookAt(poleTarget);
-        });
+            this.chainObjects[4].chain.joints[4].bone.rotation.copy(this.headRotation);
+            this.chainObjects[4].chain.joints[3].bone.rotation.copy(this.neckRotaion);
+        }
     }
 }
 export default IkObject;

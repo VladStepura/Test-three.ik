@@ -78,8 +78,6 @@ class App
             // Object updates before it's ik solved in order to set pole target
             // This will fix issues this weird angles
             ikObject.update();
-            ikObject.ik.solve();
-            ikObject.lateUpdate();
         });
         this.renderer.render(this.scene, this.camera);
 
