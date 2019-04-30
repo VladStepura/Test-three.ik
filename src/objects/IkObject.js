@@ -298,22 +298,22 @@ class IkObject
         let rightFootBone = this.ik.chains[4].joints[2].bone;
         let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
         rightFootBone.rotation.copy(rightLegChainTarget.rotation);
-        this.rotateFootToFlat(rightFootBone);
+        this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(0.5, 0,0  ));
 
         // Makes right foot follow the rotation of target
         let leftFootBone = this.ik.chains[3].joints[2].bone;
         let leftLegChainTarget = this.chainObjects[2].controlTarget.target;
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
-        this.rotateFootToFlat(leftFootBone);
+        this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(0.5, 0,0  ));
 
     }
 
-    rotateFootToFlat(foot)
+    rotateBoneQuaternion(foot, euler)
     {
         let quaternion = new THREE.Quaternion();
         foot.getWorldQuaternion(quaternion);
         quaternion.inverse();
-        let angle = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.5, 0,0  ));
+        let angle = new THREE.Quaternion().setFromEuler(euler);
         quaternion.multiply(angle);
         foot.quaternion.copy(quaternion);
     }
@@ -323,8 +323,15 @@ class IkObject
     {
         if(this.headRotation)
         {
-            this.chainObjects[4].chain.joints[4].bone.rotation.copy(this.headRotation);
-            this.chainObjects[4].chain.joints[3].bone.rotation.copy(this.neckRotaion);
+
+           //let neck = this.chainObjects[4].chain.joints[3].bone;
+           //this.rotateBoneQuaternion(neck, new THREE.Euler(-1, 0, 0));
+
+            //this.chainObjects[4].chain.joints[4].bone.rotation.copy(this.headRotation);
+            let head = this.chainObjects[4].chain.joints[4].bone;
+            this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, .0, 0));
+
+
         }
     }
 }
