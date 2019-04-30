@@ -308,14 +308,15 @@ class IkObject
 
     }
 
-    rotateBoneQuaternion(foot, euler)
+    // Sets and quaternion angle for bones
+    rotateBoneQuaternion(bone, euler)
     {
         let quaternion = new THREE.Quaternion();
-        foot.getWorldQuaternion(quaternion);
+        bone.getWorldQuaternion(quaternion);
         quaternion.inverse();
         let angle = new THREE.Quaternion().setFromEuler(euler);
         quaternion.multiply(angle);
-        foot.quaternion.copy(quaternion);
+        bone.quaternion.copy(quaternion);
     }
 
     // Applies head rotation
@@ -323,15 +324,11 @@ class IkObject
     {
         if(this.headRotation)
         {
+            let neck = this.chainObjects[4].chain.joints[3].bone;
+            neck.rotation.copy(this.neckRotaion);
 
-           //let neck = this.chainObjects[4].chain.joints[3].bone;
-           //this.rotateBoneQuaternion(neck, new THREE.Euler(-1, 0, 0));
-
-            //this.chainObjects[4].chain.joints[4].bone.rotation.copy(this.headRotation);
             let head = this.chainObjects[4].chain.joints[4].bone;
-            this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, .0, 0));
-
-
+            this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, 0, 0));
         }
     }
 }
