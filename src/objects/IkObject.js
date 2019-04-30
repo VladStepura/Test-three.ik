@@ -298,11 +298,24 @@ class IkObject
         let rightFootBone = this.ik.chains[4].joints[2].bone;
         let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
         rightFootBone.rotation.copy(rightLegChainTarget.rotation);
+        this.rotateFootToFlat(rightFootBone);
 
         // Makes right foot follow the rotation of target
         let leftFootBone = this.ik.chains[3].joints[2].bone;
         let leftLegChainTarget = this.chainObjects[2].controlTarget.target;
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
+        this.rotateFootToFlat(leftFootBone);
+
+    }
+
+    rotateFootToFlat(foot)
+    {
+        let quaternion = new THREE.Quaternion();
+        foot.getWorldQuaternion(quaternion);
+        quaternion.inverse();
+        let angle = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.5, 0,0  ));
+        quaternion.multiply(angle);
+        foot.quaternion.copy(quaternion);
     }
 
     // Applies head rotation
