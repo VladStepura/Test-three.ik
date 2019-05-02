@@ -4,6 +4,7 @@ import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import IkObject from "./objects/IkObject";
 import {TransformControls} from "./utils/TransformControls";
 import TargetControl from "./objects/TargetControl";
+import RagDoll from "./objects/RagDoll";
 
 // App is main class which initialises all object and goes through rendering cycle
 class App
@@ -59,7 +60,7 @@ class App
         const gltfLoader = new MyGLTFLoader();
         gltfLoader.loaded = (gltf) =>
         {
-            loadedObject = new IkObject();
+            loadedObject = new RagDoll();
             loadedObject.initObject(gltf.scene, rightHandControl, leftHandControl,
                                     leftLegControl, rightLegControl, backControl,
                                     hipsControl);

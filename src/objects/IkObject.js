@@ -16,6 +16,7 @@ class IkObject
         this.neckRotaion = null;
         this.enableIk = true;
         this.needsRecalculation = false;
+        this.controlTargets = [];
     }
 
     // Takes skeleton and target for it;s limbs
@@ -26,26 +27,25 @@ class IkObject
         let rigMesh = scene.children[1];
         let skeleton = null;
         this.rigMesh = rigMesh;
+        this.controlTargets = controlTarget[0];
 
         let chainObjects = [];
         this.chainObjects = chainObjects;
-        this.hipsControlTarget = controlTarget[5];
+        this.hipsControlTarget = this.controlTargets[5];
         this.hipsControlTarget.target.position.z += this.magicNumberToMoveObject;
 
-        this.initializePoleTarget();
+        //this.initializePoleTarget();
 
-        chainObjects.push(new ChainObject("RightArm", "RightHand", controlTarget[0]));
-        chainObjects.push(new ChainObject("LeftArm", "LeftHand", controlTarget[1]));
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", controlTarget[2]));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", controlTarget[3]));
 
-        chainObjects.push(new ChainObject("Spine", "Head", controlTarget[4]));
+        chainObjects.push(new ChainObject("RightArm", "RightHand", this.controlTargets[0]));
+        chainObjects.push(new ChainObject("LeftArm", "LeftHand", this.controlTargets[1]));
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", this.controlTargets[2]));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", this.controlTargets[3]));
+
+        chainObjects.push(new ChainObject("Spine", "Head", this.controlTargets[4]));
 
         // Adds events to Back control
-        this.applyEventsToBackControl(controlTarget[4].control);
-
-        // Adds gui elements to control objects
-        this.addGuiElements();
+        this.applyEventsToBackControl(controlTarget[0][4].control);
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -130,15 +130,7 @@ class IkObject
         scene.add( skeletonHelper );
         this.calculteBackOffset();
     }
-    // Sets pole targets position
-    initializePoleTarget()
-    {
-        this.poleTargets.backPoleTarget = new THREE.Vector3( 0, 0, 0);
-        this.poleTargets.rightArmPoleTarget = new THREE.Vector3( -90, 45, -90);
-        this.poleTargets.leftArmPoleTarget = new THREE.Vector3( 90, 45, -90);
-        this.poleTargets.leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
-        this.poleTargets.rightLegPoleTarget = new THREE.Vector3( 0, 45, 90);
-    }
+
     // Applies events to back control
     applyEventsToBackControl(backControl)
     {
@@ -172,28 +164,7 @@ class IkObject
     {
         let backPosition = this.chainObjects[4].controlTarget.target.position.clone();
         let hipsPosition = this.hipsControlTarget.target.position.clone();
-
-        this.backOffset = backPosition.sub(this.hipsControlTarget.target.position);
-    }
-    // Adds gui elements to scene
-    // With adding its parameters
-    addGuiElements()
-    {
-        let gui = new Gui();
-        let rightLegTarget = this.chainObjects[3].controlTarget.target;
-        let leftLegTarget = this.chainObjects[2].controlTarget.target;
-        gui.addVectorSlider(rightLegTarget.rotation, "Right target rotation",
-            -Math.PI * 1, Math.PI * 1);
-        gui.addVectorSlider(leftLegTarget.rotation, "Left target rotation",
-            -Math.PI * 1, Math.PI * 1);
-        gui.datGui.add(this, "enableIk").onChange(() =>
-            {
-                if(this.enableIk)
-                {
-                    this.recalculate();
-                }
-            });
-        gui.datGui.open();
+        this.backOffset = backPosition.sub(hipsPosition);
     }
 
     // Updates chains
@@ -210,6 +181,7 @@ class IkObject
         }
         this.lateUpdate();
     }
+
     // Applies pole target to models
     setPoleTargets()
     {
@@ -275,8 +247,6 @@ class IkObject
     // Ik solver overrides all changes if applied before it's fired
     lateUpdate()
     {
-        this.legsFollowTargetRotation();
-
         let hipsTarget = this.hipsControlTarget.target;
         // Sets back position when offset is not changing
         if(!this.applyingOffset)
@@ -289,47 +259,7 @@ class IkObject
         // Follows hips target
         this.hips.position.copy(hipsTarget.position);
         // Cause ik solver is overriding any changes to rotation need to be applied in late update
-        this.applyHeadRotation();
     }
-
-    legsFollowTargetRotation()
-    {
-        // Makes right foot follow the rotation of target
-        let rightFootBone = this.ik.chains[4].joints[2].bone;
-        let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
-        rightFootBone.rotation.copy(rightLegChainTarget.rotation);
-        this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(0.5, 0,0  ));
-
-        // Makes right foot follow the rotation of target
-        let leftFootBone = this.ik.chains[3].joints[2].bone;
-        let leftLegChainTarget = this.chainObjects[2].controlTarget.target;
-        leftFootBone.rotation.copy(leftLegChainTarget.rotation);
-        this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(0.5, 0,0  ));
-
-    }
-
-    // Sets and quaternion angle for bones
-    rotateBoneQuaternion(bone, euler)
-    {
-        let quaternion = new THREE.Quaternion();
-        bone.getWorldQuaternion(quaternion);
-        quaternion.inverse();
-        let angle = new THREE.Quaternion().setFromEuler(euler);
-        quaternion.multiply(angle);
-        bone.quaternion.copy(quaternion);
-    }
-
-    // Applies head rotation
-    applyHeadRotation()
-    {
-        if(this.headRotation)
-        {
-            let neck = this.chainObjects[4].chain.joints[3].bone;
-            neck.rotation.copy(this.neckRotaion);
-
-            let head = this.chainObjects[4].chain.joints[4].bone;
-            this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, 0, 0));
-        }
-    }
+    
 }
 export default IkObject;
