@@ -30,12 +30,6 @@ class PoleConstraint
         let polePose = this.poleTarget.mesh.position.clone();
         let goalPose = this.poleChain.target.position.clone();
 
-        // this.poleTarget.mesh.getWorldPosition(polePose);
-        // joints[joints.length - 1].bone.getWorldPosition(endPose);
-        // joints[0].bone.getWorldPosition(rootPose);
-        // this.poleChain.target.getWorldPosition(goalPose);
-
-
         this.showOnFirstRun(endPose);
         let rootMatrix = joints[0].bone.matrix.clone();
 
@@ -60,26 +54,15 @@ class PoleConstraint
         unitY = x.clone().multiply(poleDir).normalize();
         polerot.makeBasis(x, unitY, poleDir.negate());
 
-        let inverse = endrot; //new THREE.Matrix4();
-      //  inverse.getInverse(endrot);
+        let inverse = endrot;
 
         this.showOnFirstRun("result: ");
         let result = polerot.multiply(inverse);
-        //this.showOnFirstRun(result.elements);
-   /*     this.poleChain.joints.forEach((joint) =>
-        {
 
-        });*/
         let rootBone =  joints[0].bone;
-        let oldMatrix = rootBone.matrix.clone();
+        let oldMatrix = rootBone.matrix;
         let newMatrix = oldMatrix.multiply(result);
         this.showOnFirstRun(newMatrix);
-        if(this.firstRun)
-        {
-           // rootBone.applyMatrix(newMatrix);
-        }
-
-        //joints[2].bone.matrix.multiply(result);
         this.firstRun = false;
     }
 
