@@ -182,31 +182,6 @@ class IkObject
         this.lateUpdate();
     }
 
-    // Applies pole target to models
-    setPoleTargets()
-    {
-        let backChain = this.ik.chains[0];
-        let backPoleTarget = this.poleTargets.backPoleTarget;
-
-        let rightArmChain = this.ik.chains[1];
-        let rightArmPoleTarget = this.poleTargets.rightArmPoleTarget;
-
-        let leftArmChain = this.ik.chains[2];
-        let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
-
-        let leftLegChain = this.ik.chains[3];
-        let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
-
-        let rightLegChain = this.ik.chains[4];
-        let rightLegPoleTarget = this.poleTargets.rightLegPoleTarget;
-
-        this.chainRotate(backChain, backPoleTarget);
-        this.chainRotate(leftArmChain, leftArmPoleTarget);
-        this.chainRotate(rightArmChain, rightArmPoleTarget);
-        this.chainRotate(leftLegChain, leftLegPoleTarget);
-        this.chainRotate(rightLegChain, rightLegPoleTarget);
-    }
-
     // Recalculates positions of transform controls
     recalculate()
     {
@@ -233,14 +208,7 @@ class IkObject
         this.calculteBackOffset();
     }
 
-    // Rotates whole chain towards position
-    chainRotate(chain, poleTarget)
-    {
-        chain.joints.forEach((joint) =>
-        {
-            joint.bone.lookAt(poleTarget);
-        });
-    }
+
 
     // Updates which is called last after all stuff in loop has been done
     // Fires after ik solver in order to apply custom changes to models
@@ -260,6 +228,6 @@ class IkObject
         this.hips.position.copy(hipsTarget.position);
         // Cause ik solver is overriding any changes to rotation need to be applied in late update
     }
-    
+
 }
 export default IkObject;

@@ -1,6 +1,8 @@
 import IkObject from "./IkObject";
 import * as THREE from "three";
 import Gui from "./Gui";
+import PoleConstraint from "../contraints/PoleContraint";
+import PoleTarget from "./PoleTarget";
 
 class RagDoll extends IkObject
 {
@@ -15,6 +17,9 @@ class RagDoll extends IkObject
         this.initializePoleTarget();
         // Adds gui elements to control objects
         this.addGuiElements();
+        let poleTarget = new PoleTarget(new THREE.Vector3(0, 1, 0));
+        console.log(this.ik.chains[0]);
+        this.leftArmPoleConstraint = new PoleConstraint(this.ik.chains[0], poleTarget);
     }
 
     // Sets pole targets position
@@ -48,6 +53,53 @@ class RagDoll extends IkObject
             }
         });
         gui.datGui.open();
+    }
+    update()
+    {
+        super.update();
+        if(this.enableIk)
+        {
+            // Pole target needs to be applied before ik
+            // in order to changer figure parameters
+            this.setPoleTargets();
+            // Solves the inverse kinematic of object
+            this.ik.solve();
+        }
+        this.lateUpdate();
+    }
+
+    // Applies pole target to models
+    setPoleTargets()
+    {
+        let backChain = this.ik.chains[0];
+        let backPoleTarget = this.poleTargets.backPoleTarget;
+
+        let rightArmChain = this.ik.chains[1];
+        let rightArmPoleTarget = this.poleTargets.rightArmPoleTarget;
+
+        let leftArmChain = this.ik.chains[2];
+        let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
+
+        let leftLegChain = this.ik.chains[3];
+        let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
+
+        let rightLegChain = this.ik.chains[4];
+        let rightLegPoleTarget = this.poleTargets.rightLegPoleTarget;
+
+        this.chainRotate(backChain, backPoleTarget);
+        this.chainRotate(leftArmChain, leftArmPoleTarget);
+        this.chainRotate(rightArmChain, rightArmPoleTarget);
+        this.chainRotate(leftLegChain, leftLegPoleTarget);
+        this.chainRotate(rightLegChain, rightLegPoleTarget);
+    }
+
+    // Rotates whole chain towards position
+    chainRotate(chain, poleTarget)
+    {
+        chain.joints.forEach((joint) =>
+        {
+            joint.bone.lookAt(poleTarget);
+        });
     }
 
     lateUpdate()
