@@ -30,7 +30,12 @@ class PoleConstraint
         let polePose = this.poleTarget.mesh.position.clone();
         let goalPose = this.poleChain.target.position.clone();
 
-        joints[joints.length - 1].bone.getWorldPosition(endPose);
+        // this.poleTarget.mesh.getWorldPosition(polePose);
+        // joints[joints.length - 1].bone.getWorldPosition(endPose);
+        // joints[0].bone.getWorldPosition(rootPose);
+        // this.poleChain.target.getWorldPosition(goalPose);
+
+
         this.showOnFirstRun(endPose);
         let rootMatrix = joints[0].bone.matrix.clone();
 
@@ -46,7 +51,6 @@ class PoleConstraint
         let endrot = new THREE.Matrix4();
         let polerot = new THREE.Matrix4()
 
-
         let x = dir.clone();
         x.multiply(up).normalize();
         let unitY = x.clone().multiply(dir).normalize();
@@ -56,23 +60,25 @@ class PoleConstraint
         unitY = x.clone().multiply(poleDir).normalize();
         polerot.makeBasis(x, unitY, poleDir.negate());
 
-        let inverse = endrot;// new THREE.Matrix4();
+        let inverse = endrot; //new THREE.Matrix4();
       //  inverse.getInverse(endrot);
 
         this.showOnFirstRun("result: ");
-        let result =  polerot.multiply(inverse);
-        this.showOnFirstRun(result.elements);
-        this.poleChain.joints.forEach((joint) =>
+        let result = polerot.multiply(inverse);
+        //this.showOnFirstRun(result.elements);
+   /*     this.poleChain.joints.forEach((joint) =>
         {
-            let oldMatrix = joint.bone.matrix.clone();
-            let newMatrix = oldMatrix.multiply(result);
-            this.showOnFirstRun(newMatrix);
-            if(this.firstRun)
-            {
-                joint.bone.applyMatrix(newMatrix);
-            }
 
-        });
+        });*/
+        let rootBone =  joints[0].bone;
+        let oldMatrix = rootBone.matrix.clone();
+        let newMatrix = oldMatrix.multiply(result);
+        this.showOnFirstRun(newMatrix);
+        if(this.firstRun)
+        {
+           // rootBone.applyMatrix(newMatrix);
+        }
+
         //joints[2].bone.matrix.multiply(result);
         this.firstRun = false;
     }
