@@ -13,13 +13,15 @@ class RagDoll extends IkObject
 
     initObject(scene, ...controlTarget)
     {
+        console.log("Scene: ");
+        console.log(scene);
         super.initObject(scene, controlTarget);
         this.initializePoleTarget();
         // Adds gui elements to control objects
+        let poleTarget = new PoleTarget(new THREE.Vector3(-.5, 1, .5));
+        //console.log(this.ik.chains[2]);
+        this.leftArmPoleConstraint = new PoleConstraint(this.ik.chains[2], poleTarget);
         this.addGuiElements();
-        let poleTarget = new PoleTarget(new THREE.Vector3(0, 1, 0));
-        console.log(this.ik.chains[0]);
-        this.leftArmPoleConstraint = new PoleConstraint(this.ik.chains[0], poleTarget);
     }
 
     // Sets pole targets position
@@ -52,6 +54,10 @@ class RagDoll extends IkObject
                 this.recalculate();
             }
         });
+        let leftArmPole = this.leftArmPoleConstraint.poleTarget.mesh;
+        gui.addVectorSlider(leftArmPole.position, "Left Arm Pole Position", -2, 2);
+        let folder = gui.datGui.addFolder("LeftArmPole");
+        folder.add(this.leftArmPoleConstraint, "poleAngle", -360, 360);
         gui.datGui.open();
     }
     update()
@@ -64,6 +70,7 @@ class RagDoll extends IkObject
             this.setPoleTargets();
             // Solves the inverse kinematic of object
             this.ik.solve();
+
         }
         this.lateUpdate();
     }
@@ -77,8 +84,6 @@ class RagDoll extends IkObject
         let rightArmChain = this.ik.chains[1];
         let rightArmPoleTarget = this.poleTargets.rightArmPoleTarget;
 
-        let leftArmChain = this.ik.chains[2];
-        let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
 
         let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
@@ -87,10 +92,12 @@ class RagDoll extends IkObject
         let rightLegPoleTarget = this.poleTargets.rightLegPoleTarget;
 
         this.chainRotate(backChain, backPoleTarget);
-        this.chainRotate(leftArmChain, leftArmPoleTarget);
         this.chainRotate(rightArmChain, rightArmPoleTarget);
         this.chainRotate(leftLegChain, leftLegPoleTarget);
         this.chainRotate(rightLegChain, rightLegPoleTarget);
+
+        this.leftArmPoleConstraint.apply();
+
     }
 
     // Rotates whole chain towards position
