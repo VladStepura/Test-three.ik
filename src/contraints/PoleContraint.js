@@ -9,7 +9,6 @@ class PoleConstraint
         this.poleAngle = 0;
         this.addPoleTargetToScene();
         this.firstRun = true;
-        console.log(this.poleChain);
     }
 
     addPoleTargetToScene()
@@ -22,12 +21,17 @@ class PoleConstraint
         scene.add(this.poleTarget.mesh);
     }
 
+    // Changes target's matrix in order to correspond to pole target
     apply()
     {
         let joints = this.poleChain.joints;
+        // First bone in chain position
         let rootPose = joints[0].bone.position.clone();
+        // Last bone in chain position
         let endPose = joints[joints.length - 1].bone.position.clone();
+        // Pole target position
         let polePose = this.poleTarget.mesh.position.clone();
+        // Moving target position
         let goalPose = this.poleChain.target.position.clone();
 
         this.showOnFirstRun(endPose);
@@ -37,7 +41,7 @@ class PoleConstraint
         let rootZ = this.matrixUnitY(rootMatrix);
 
         this.showOnFirstRun(endPose);
-
+        // Direction of chain
         let dir = endPose.sub(rootPose).normalize();
         let poleDir = goalPose.sub(rootPose).normalize();
         let poleUp = polePose.sub(rootPose).normalize();
@@ -80,29 +84,7 @@ class PoleConstraint
     }
     //#endregion
 
-    //#region Setting basis to matrix
-    unitX(matrix, value)
-    {
-        matrix.elements[0] = value.x;
-        matrix.elements[3] = value.y;
-        matrix.elements[6] = value.z;
-    }
-
-    unitY(matrix, value)
-    {
-        matrix.elements[1] = value.x;
-        matrix.elements[4] = value.y;
-        matrix.elements[7] = value.z;
-    }
-
-    unitZ(matrix, value)
-    {
-        matrix.elements[2] = value.x;
-        matrix.elements[5] = value.y;
-        matrix.elements[8] = value.z;
-    }
-    //#endregion
-
+    // Runs console.log only once in lifecycle
     showOnFirstRun(value)
     {
         if(this.firstRun)

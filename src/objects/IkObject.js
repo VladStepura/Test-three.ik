@@ -2,7 +2,6 @@ import {IK, IKBallConstraint, IKChain, IKHelper, IKHingeConstraint, IKJoint} fro
 import * as THREE from "three";
 import setZForward from "../utils/axisUtils";
 import ChainObject from "./ChainObject";
-import Gui from "./Gui";
 
 // IKObject is class which applies ik onto skeleton
 class IkObject
@@ -33,9 +32,6 @@ class IkObject
         this.chainObjects = chainObjects;
         this.hipsControlTarget = this.controlTargets[5];
         this.hipsControlTarget.target.position.z += this.magicNumberToMoveObject;
-
-        //this.initializePoleTarget();
-
 
         chainObjects.push(new ChainObject("RightArm", "RightHand", this.controlTargets[0]));
         chainObjects.push(new ChainObject("LeftArm", "LeftHand", this.controlTargets[1]));
@@ -75,8 +71,6 @@ class IkObject
                     this.hips = object;
                     setZForward(object);
                     rigMesh.bind(rigMesh.skeleton);
-                    console.log(skeleton);
-                    //object.position.z += 2;
                 }
 
                 // Goes through all chain objects to find with which we are working
@@ -207,8 +201,6 @@ class IkObject
         back.getWorldPosition(backTarget.position);
         this.calculteBackOffset();
     }
-
-
 
     // Updates which is called last after all stuff in loop has been done
     // Fires after ik solver in order to apply custom changes to models

@@ -13,13 +13,10 @@ class RagDoll extends IkObject
 
     initObject(scene, ...controlTarget)
     {
-        console.log("Scene: ");
-        console.log(scene);
         super.initObject(scene, controlTarget);
         this.initializePoleTarget();
         // Adds gui elements to control objects
         let poleTarget = new PoleTarget(new THREE.Vector3(-.5, 1, .5));
-        //console.log(this.ik.chains[2]);
         this.leftArmPoleConstraint = new PoleConstraint(this.ik.chains[2], poleTarget);
         this.addGuiElements();
     }
@@ -27,7 +24,6 @@ class RagDoll extends IkObject
     // Sets pole targets position
     initializePoleTarget()
     {
-        console.log(this.poleTargets);
         this.poleTargets.backPoleTarget = new THREE.Vector3( 0, 0, 0);
         this.poleTargets.rightArmPoleTarget = new THREE.Vector3( -90, 45, -90);
         this.poleTargets.leftArmPoleTarget = new THREE.Vector3( 90, 45, -90);
@@ -39,7 +35,6 @@ class RagDoll extends IkObject
     // With adding its parameters
     addGuiElements()
     {
-        console.log(this.chainObjects[3].controlTarget);
         let gui = new Gui();
         let rightLegTarget = this.chainObjects[3].controlTarget.target;
         let leftLegTarget = this.chainObjects[2].controlTarget.target;
@@ -60,6 +55,7 @@ class RagDoll extends IkObject
         folder.add(this.leftArmPoleConstraint, "poleAngle", -360, 360);
         gui.datGui.open();
     }
+
     update()
     {
         super.update();
@@ -84,7 +80,6 @@ class RagDoll extends IkObject
         let rightArmChain = this.ik.chains[1];
         let rightArmPoleTarget = this.poleTargets.rightArmPoleTarget;
 
-
         let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
 
@@ -97,7 +92,6 @@ class RagDoll extends IkObject
         this.chainRotate(rightLegChain, rightLegPoleTarget);
 
         this.leftArmPoleConstraint.apply();
-
     }
 
     // Rotates whole chain towards position
@@ -115,7 +109,7 @@ class RagDoll extends IkObject
         super.lateUpdate();
         this.applyHeadRotation();
     }
-
+    // Follows moving target rotation which applied to feet
     legsFollowTargetRotation()
     {
         // Makes right foot follow the rotation of target

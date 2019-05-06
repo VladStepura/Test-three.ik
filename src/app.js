@@ -12,7 +12,6 @@ class App
     constructor()
     {
         this.iKObjects = [];
-        console.log( this.iKObjects);
     }
     // Initialize main app
     initialize()
