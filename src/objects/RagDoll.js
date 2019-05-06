@@ -9,6 +9,7 @@ class RagDoll extends IkObject
     constructor()
     {
         super();
+        this.poleConstraints = [];
     }
 
     initObject(scene, ...controlTarget)
@@ -16,8 +17,12 @@ class RagDoll extends IkObject
         super.initObject(scene, controlTarget);
         this.initializePoleTarget();
         // Adds gui elements to control objects
-        let poleTarget = new PoleTarget(new THREE.Vector3(-.5, 1, .5));
-        this.leftArmPoleConstraint = new PoleConstraint(this.ik.chains[2], poleTarget);
+        let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
+        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.25, .8, 1.6));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], leftArmPoleTarget));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], leftLegPoleTarget));
+        this.poleConstraints[0].poleAngle = 8;
+        this.poleConstraints[1].poleAngle = 60;
         this.addGuiElements();
     }
 
@@ -25,10 +30,8 @@ class RagDoll extends IkObject
     initializePoleTarget()
     {
         this.poleTargets.backPoleTarget = new THREE.Vector3( 0, 0, 0);
-        this.poleTargets.rightArmPoleTarget = new THREE.Vector3( -90, 45, -90);
-        this.poleTargets.leftArmPoleTarget = new THREE.Vector3( 90, 45, -90);
+        this.poleTargets.leftArmPoleTarget = new THREE.Vector3( -90, 45, -90);
         this.poleTargets.leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
-        this.poleTargets.rightLegPoleTarget = new THREE.Vector3( 0, 45, 90);
     }
 
     // Adds gui elements to scene
@@ -49,10 +52,16 @@ class RagDoll extends IkObject
                 this.recalculate();
             }
         });
-        let leftArmPole = this.leftArmPoleConstraint.poleTarget.mesh;
+        let leftArmPole = this.poleConstraints[0].poleTarget.mesh;
         gui.addVectorSlider(leftArmPole.position, "Left Arm Pole Position", -2, 2);
-        let folder = gui.datGui.addFolder("LeftArmPole");
-        folder.add(this.leftArmPoleConstraint, "poleAngle", -360, 360);
+
+        let leftLegPole = this.poleConstraints[1].poleTarget.mesh;
+        gui.addVectorSlider(leftLegPole.position, "Left Leg Pole Position", -2, 2);
+
+        let armFolder = gui.datGui.addFolder("LeftArmPole");
+        armFolder.add(this.poleConstraints[0], "poleAngle", -360, 360);
+        let legFolder = gui.datGui.addFolder("LeftLegPole");
+        legFolder.add(this.poleConstraints[1], "poleAngle", -360, 360);
         gui.datGui.open();
     }
 
@@ -66,9 +75,7 @@ class RagDoll extends IkObject
             this.setPoleTargets();
             // Solves the inverse kinematic of object
             this.ik.solve();
-
         }
-
         this.lateUpdate();
     }
 
@@ -78,22 +85,21 @@ class RagDoll extends IkObject
         let backChain = this.ik.chains[0];
         let backPoleTarget = this.poleTargets.backPoleTarget;
 
-        let rightArmChain = this.ik.chains[1];
-        let rightArmPoleTarget = this.poleTargets.rightArmPoleTarget;
+        let leftArmChain = this.ik.chains[1];
+        let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
 
         let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
 
-        let rightLegChain = this.ik.chains[4];
-        let rightLegPoleTarget = this.poleTargets.rightLegPoleTarget;
-
         this.chainRotate(backChain, backPoleTarget);
-        this.chainRotate(rightArmChain, rightArmPoleTarget);
+        this.chainRotate(leftArmChain, leftArmPoleTarget);
         this.chainRotate(leftLegChain, leftLegPoleTarget);
-        this.chainRotate(rightLegChain, rightLegPoleTarget);
 
         // Applies blender's pole constraint to left arm
-        this.leftArmPoleConstraint.apply();
+        this.poleConstraints.forEach((poleConstraint) =>
+        {
+            poleConstraint.apply();
+        });
     }
 
     // Rotates whole chain towards position
