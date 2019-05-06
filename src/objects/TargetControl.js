@@ -25,5 +25,12 @@ class TargetControl
         scene.add(this.control);
         this.target = movingTarget;
     }
+
+    intializeWithMesh(mesh, scene)
+    {
+        this.control.attach(mesh);
+        scene.add(this.control);
+        this.target = mesh;
+    }
 }
 export default TargetControl;

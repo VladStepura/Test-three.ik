@@ -11,21 +11,18 @@ class IkObject
         this.applyingOffset = false;
         this.magicNumberToMoveObject = 1;
         this.poleTargets = {};
-        this.headRotation = null;
-        this.neckRotaion = null;
+        this.neckRotation = null;
         this.enableIk = true;
-        this.needsRecalculation = false;
         this.controlTargets = [];
     }
 
-    // Takes skeleton and target for it;s limbs
+    // Takes skeleton and target for it's limbs
     initObject(scene, ...controlTarget)
     {
         this.ik = new IK();
         let chains = [];
         let rigMesh = scene.children[1];
         let skeleton = null;
-        this.rigMesh = rigMesh;
         this.controlTargets = controlTarget[0];
 
         let chainObjects = [];
@@ -49,7 +46,6 @@ class IkObject
             // Searches only bones object
             if(object instanceof THREE.Bone)
             {
-
                 // Finds skeleton for skeletonHelper
                 if(skeleton === null)
                 {
@@ -61,8 +57,6 @@ class IkObject
                         parent = parent.parent;
                     }
                     skeleton = parent;
-
-                   // skeleton.updateMatrixWorld(true);
                 }
                 // Flips a model's forward from -Z to +Z
                 // By default Models axis is -Z while Three ik works with +Z
@@ -72,7 +66,6 @@ class IkObject
                     setZForward(object);
                     rigMesh.bind(rigMesh.skeleton);
                 }
-
                 // Goes through all chain objects to find with which we are working
                 chainObjects.forEach((chainObject) =>
                 {
@@ -115,7 +108,6 @@ class IkObject
         {
             this.ik.add(chain);
         });
-
         // Sets skeleton helper for showing bones
         let skeletonHelper = new THREE.SkeletonHelper( skeleton );
         // Sets line width of skeleton helper
@@ -137,10 +129,8 @@ class IkObject
             if(this.enableIk)
             {
                 let spineRotation = this.chainObjects[4].chain.joints[0].bone.rotation.clone();
-                this.headRotation = this.chainObjects[4].chain.joints[4].bone.rotation.clone();
-                this.neckRotaion = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
-                this.headRotation.y = -spineRotation.y * 0.5;
-                this.neckRotaion.y = -spineRotation.y * 0.5;
+                this.neckRotation = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
+                this.neckRotation.y = -spineRotation.y * 0.5;
             }
         });
         backControl.addEventListener("dragging-changed", (event) =>
@@ -177,6 +167,8 @@ class IkObject
     }
 
     // Recalculates positions of transform controls
+    // It works when ik is disable and when enabled in order to recalculate all position
+    // Which have been changed while ik was turned off
     recalculate()
     {
         let leftHand = this.chainObjects[1].chain.joints[2].bone;
@@ -209,6 +201,7 @@ class IkObject
     {
         let hipsTarget = this.hipsControlTarget.target;
         // Sets back position when offset is not changing
+        // When we are changing back position offset between hips and back shouldn't be applied
         if(!this.applyingOffset)
         {
             let backTarget = this.chainObjects[4].controlTarget.target;

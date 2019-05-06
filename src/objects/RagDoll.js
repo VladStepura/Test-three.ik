@@ -68,6 +68,7 @@ class RagDoll extends IkObject
             this.ik.solve();
 
         }
+
         this.lateUpdate();
     }
 
@@ -91,6 +92,7 @@ class RagDoll extends IkObject
         this.chainRotate(leftLegChain, leftLegPoleTarget);
         this.chainRotate(rightLegChain, rightLegPoleTarget);
 
+        // Applies blender's pole constraint to left arm
         this.leftArmPoleConstraint.apply();
     }
 
@@ -138,10 +140,10 @@ class RagDoll extends IkObject
     // Applies head rotation
     applyHeadRotation()
     {
-        if(this.headRotation)
+        if(this.neckRotation)
         {
             let neck = this.chainObjects[4].chain.joints[3].bone;
-            neck.rotation.copy(this.neckRotaion);
+            neck.rotation.copy(this.neckRotation);
 
             let head = this.chainObjects[4].chain.joints[4].bone;
             this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, 0, 0));
