@@ -18,11 +18,12 @@ class RagDoll extends IkObject
         this.initializePoleTarget();
         // Adds gui elements to control objects
         let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
-        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.25, .8, 1.6));
+        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], leftArmPoleTarget));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], leftLegPoleTarget));
         this.poleConstraints[0].poleAngle = 8;
         this.poleConstraints[1].poleAngle = 60;
+        this.poleConstraints[1].isLeg = true;
         this.addGuiElements();
     }
 
@@ -117,6 +118,7 @@ class RagDoll extends IkObject
         super.lateUpdate();
         this.applyHeadRotation();
     }
+
     // Follows moving target rotation which applied to feet
     legsFollowTargetRotation()
     {

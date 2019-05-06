@@ -1,8 +1,6 @@
 import * as THREE from "three";
 import {OrbitControls} from "./utils/OrbitControls";
 import MyGLTFLoader from "./loaders/MyGLTFLoader";
-import IkObject from "./objects/IkObject";
-import {TransformControls} from "./utils/TransformControls";
 import TargetControl from "./objects/TargetControl";
 import RagDoll from "./objects/RagDoll";
 

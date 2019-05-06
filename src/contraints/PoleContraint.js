@@ -9,6 +9,7 @@ class PoleConstraint
         this.poleAngle = 90;
         this.addPoleTargetToScene();
         this.firstRun = true;
+        this.isLeg = false;
     }
 
     addPoleTargetToScene()
@@ -37,9 +38,23 @@ class PoleConstraint
         let endBone = joints[joints.length - 1].bone.position.clone();
         // Pole target position
         let polePose = this.poleTarget.mesh.position.clone();
+        // Moving target position
+        let goalPose = this.poleChain.target.position.clone();
 
         let angleBetween = polePose.angleTo(rootPose);
         let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
+
+        if(this.isLeg && goalPose.y < 0.38)
+        {
+            let maxZ = polePose.z;
+            let currentOffset = maxZ;
+            if(goalPose.z > .9 && goalPose.z < 1.0)
+            {
+                currentOffset = 1 + goalPose.y / 24;
+                console.log(goalPose.z)
+            }
+            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < 1 ? 1 : currentOffset;
+        }
 
         this.poleChain.joints.forEach((joint) =>
         {
