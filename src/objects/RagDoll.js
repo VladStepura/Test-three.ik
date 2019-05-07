@@ -21,8 +21,8 @@ class RagDoll extends IkObject
         let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], leftArmPoleTarget));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], leftLegPoleTarget));
-        this.poleConstraints[0].poleAngle = 8;
-        this.poleConstraints[1].poleAngle = 60;
+        this.poleConstraints[0].poleAngle = 90;
+        this.poleConstraints[1].poleAngle = -120;
         this.poleConstraints[1].isLeg = true;
         this.addGuiElements();
     }

@@ -44,24 +44,41 @@ class PoleConstraint
         let angleBetween = polePose.angleTo(rootPose);
         let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
 
-        if(this.isLeg && goalPose.y < 0.38)
+        if(this.isLeg && (goalPose.y < 0.38 || goalPose.z < 1.60))
         {
-            let maxZ = polePose.z;
-            let currentOffset = maxZ;
-            if(goalPose.z > .9 && goalPose.z < 1.0)
-            {
-                currentOffset = 1 + goalPose.y / 24;
-                console.log(goalPose.z)
-            }
-            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < 1 ? 1 : currentOffset;
+            this.blending(goalPose, polePose);
         }
 
+        let position = new THREE.Vector3();
+
+        // Going through list of all joint and modify them
         this.poleChain.joints.forEach((joint) =>
         {
-            joint.bone.lookAt(polePose);
-            joint.bone.rotateX(angleDiff);
-            joint.bone.rotateY(angleDiff);
+            // Cloning bone in order to modify it's position and rotation
+            let cloneBone = joint.bone.clone();
+
+            position.setFromMatrixPosition( cloneBone.matrixWorld );
+            // Working with matrix in order to copy it's rotation & quaternion in original bone
+            cloneBone.matrix.lookAt(polePose, position, cloneBone.up);
+            let axis = new THREE.Vector3(1, 1, 0);
+            cloneBone.matrix.makeRotationAxis(axis, angleDiff);
+
+            joint.bone.updateWorldMatrix( true, false );
+            joint.bone.quaternion.setFromRotationMatrix(cloneBone.matrix);
+            joint.bone.rotation.setFromRotationMatrix(cloneBone.matrix);
         });
+    }
+
+    blending(goalPose, polePose)
+    {
+        let maxZ = polePose.z;
+        let currentOffset = maxZ;
+        if(goalPose.z > .9 && goalPose.z < 1.3)
+        {
+            currentOffset = 1 + goalPose.y / 24 + goalPose.z / 96;
+            console.log(goalPose.z)
+        }
+        polePose.z = currentOffset > maxZ ? maxZ : currentOffset < 1 ? 1 : currentOffset;
     }
 
     degToRad(degree)
