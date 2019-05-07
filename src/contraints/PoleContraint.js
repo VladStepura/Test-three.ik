@@ -78,19 +78,24 @@ class PoleConstraint
     blending(goalPose, polePose)
     {
         let offset = this.neutralOffset;
-        if(this.inBetween(goalPose, this.neutralStatePosition, offset))
+        let neutralPose = this.neutralStatePosition;
+        if(this.inBetween(goalPose, this.neutralStatePosition, offset) || goalPose.y <= neutralPose.y)
         {
             let maxZ = polePose.z;
-            let neutralPose = this.neutralStatePosition;
-
+            let smooth = 8;
             let differenceX = Math.abs(goalPose.x - neutralPose.x);
             let differenceY = goalPose.y - neutralPose.y;
-            let differenceZ = Math.abs(goalPose.z - neutralPose.z);
+            let differenceZ = goalPose.z - neutralPose.z;
             let legStartingPosition = 1;
-            let currentOffset = legStartingPosition + differenceX / 5 + differenceY + differenceZ;
-            console.log(currentOffset);
-            console.log(neutralPose.y);
-            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < 1 ? 1 : currentOffset;
+            let maxStartPos = 1.1;
+            let minStartPos = .9;
+            let currentOffset = legStartingPosition + differenceX / smooth + differenceY + differenceZ / smooth;
+            if(goalPose.y <= neutralPose.y)
+            {
+                currentOffset = legStartingPosition + differenceZ / smooth;
+                currentOffset = currentOffset > maxStartPos ? maxStartPos : currentOffset < minStartPos ? currentOffset : currentOffset;
+            }
+            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < minStartPos ? legStartingPosition : currentOffset;
         }
     }
 
@@ -104,14 +109,14 @@ class PoleConstraint
     {
         let currentX = currentPose.x;
         let neutralX = neutralPose.x;
-        let currentY = currentPose.y;
-        let neutralY = neutralPose.y;
+        let currentY = Math.abs(currentPose.y);
+        let neutralY = Math.abs(neutralPose.y);
         let currentZ = Math.abs(currentPose.z);
         let neutralZ = Math.abs(neutralPose.z);
         let isX = currentX < neutralX - offset ? false : currentX > neutralX + offset ? false : true;
         let isY = currentY > neutralY + offset ? false : true;
         let isZ = currentZ < neutralZ - offset ? false : currentZ > neutralZ + offset ? false : true;
-        return isX && isY && isZ;
+        return isX || isY || isZ;
     }
     //#region Blender's constraint
     blendersConstraint()
