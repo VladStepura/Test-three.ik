@@ -10,6 +10,8 @@ class PoleConstraint
         this.addPoleTargetToScene();
         this.firstRun = true;
         this.isLeg = false;
+        this.neutralStatePosition = poleChain.target.position.clone();
+        this.neutralOffset = .5;
     }
 
     addPoleTargetToScene()
@@ -44,41 +46,49 @@ class PoleConstraint
         let angleBetween = polePose.angleTo(rootPose);
         let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
 
-        if(this.isLeg && (goalPose.y < 0.38 || goalPose.z < 1.60))
+        // Blending is needed only for leg right now
+        if(this.isLeg)
         {
             this.blending(goalPose, polePose);
         }
 
         let position = new THREE.Vector3();
-
-        // Going through list of all joint and modify them
+        let matrix = new THREE.Matrix4();
         this.poleChain.joints.forEach((joint) =>
         {
             // Cloning bone in order to modify it's position and rotation
             let cloneBone = joint.bone.clone();
-
+            joint.bone.lookAt(polePose);
             position.setFromMatrixPosition( cloneBone.matrixWorld );
-            // Working with matrix in order to copy it's rotation & quaternion in original bone
-            cloneBone.matrix.lookAt(polePose, position, cloneBone.up);
+            matrix.lookAt(polePose, position, cloneBone.up);
             let axis = new THREE.Vector3(1, 1, 0);
-            cloneBone.matrix.makeRotationAxis(axis, angleDiff);
+            matrix.makeRotationAxis(axis, angleDiff);
 
             joint.bone.updateWorldMatrix( true, false );
-            joint.bone.quaternion.setFromRotationMatrix(cloneBone.matrix);
-            joint.bone.rotation.setFromRotationMatrix(cloneBone.matrix);
+            let parent = cloneBone.parent;
+            if ( parent )
+            {
+                matrix.extractRotation( parent.matrixWorld );
+                cloneBone.quaternion.setFromRotationMatrix( matrix );
+                joint.bone.quaternion.premultiply( cloneBone.quaternion.inverse() );
+            }
         });
     }
-
+    // Blends between neutral position of element and constrained position
     blending(goalPose, polePose)
     {
-        let maxZ = polePose.z;
-        let currentOffset = maxZ;
-        if(goalPose.z > .9 && goalPose.z < 1.3)
+        let offset = this.neutralOffset;
+        if(this.inBetween(goalPose, this.neutralStatePosition, offset))
         {
-            currentOffset = 1 + goalPose.y / 24 + goalPose.z / 96;
-            console.log(goalPose.z)
+            let maxZ = polePose.z;
+            let neutralPose = this.neutralStatePosition;
+            let differenceX = Math.abs(goalPose.x - neutralPose.x);
+            let differenceY = Math.abs(goalPose.y - neutralPose.y);
+            let differenceZ = Math.abs(goalPose.z - neutralPose.z);
+            let legStartingPosition = 1;
+            let currentOffset = legStartingPosition + differenceX + differenceY + differenceZ;
+            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < neutralPose ? neutralPose : currentOffset;
         }
-        polePose.z = currentOffset > maxZ ? maxZ : currentOffset < 1 ? 1 : currentOffset;
     }
 
     degToRad(degree)
@@ -86,6 +96,20 @@ class PoleConstraint
         return degree * Math.PI/180;
     }
 
+    // Tells if vector is in between offset of neutral vector
+    inBetween(currentPose, neutralPose, offset)
+    {
+        let currentX = Math.abs(currentPose.x);
+        let neutralX = Math.abs(neutralPose.x);
+        let currentY = Math.abs(currentPose.y);
+        let neutralY = Math.abs(neutralPose.y);
+        let currentZ = Math.abs(currentPose.z);
+        let neutralZ = Math.abs(neutralPose.z);
+        let isX = currentX < neutralX - offset ? false : currentX > neutralX + offset ? false : true;
+        let isY = currentY < neutralY - offset ? false : currentY > neutralY + offset ? false : true;
+        let isZ = currentZ < neutralZ - offset ? false : currentZ > neutralZ + offset ? false : true;
+        return isX && isY && isZ;
+    }
     //#region Blender's constraint
     blendersConstraint()
     {
