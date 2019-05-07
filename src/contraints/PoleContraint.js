@@ -11,7 +11,7 @@ class PoleConstraint
         this.firstRun = true;
         this.isLeg = false;
         this.neutralStatePosition = poleChain.target.position.clone();
-        this.neutralOffset = .5;
+        this.neutralOffset = .35;
     }
 
     addPoleTargetToScene()
@@ -82,12 +82,15 @@ class PoleConstraint
         {
             let maxZ = polePose.z;
             let neutralPose = this.neutralStatePosition;
+
             let differenceX = Math.abs(goalPose.x - neutralPose.x);
-            let differenceY = Math.abs(goalPose.y - neutralPose.y);
+            let differenceY = goalPose.y - neutralPose.y;
             let differenceZ = Math.abs(goalPose.z - neutralPose.z);
             let legStartingPosition = 1;
-            let currentOffset = legStartingPosition + differenceX + differenceY + differenceZ;
-            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < neutralPose ? neutralPose : currentOffset;
+            let currentOffset = legStartingPosition + differenceX / 5 + differenceY + differenceZ;
+            console.log(currentOffset);
+            console.log(neutralPose.y);
+            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < 1 ? 1 : currentOffset;
         }
     }
 
@@ -99,14 +102,14 @@ class PoleConstraint
     // Tells if vector is in between offset of neutral vector
     inBetween(currentPose, neutralPose, offset)
     {
-        let currentX = Math.abs(currentPose.x);
-        let neutralX = Math.abs(neutralPose.x);
-        let currentY = Math.abs(currentPose.y);
-        let neutralY = Math.abs(neutralPose.y);
+        let currentX = currentPose.x;
+        let neutralX = neutralPose.x;
+        let currentY = currentPose.y;
+        let neutralY = neutralPose.y;
         let currentZ = Math.abs(currentPose.z);
         let neutralZ = Math.abs(neutralPose.z);
         let isX = currentX < neutralX - offset ? false : currentX > neutralX + offset ? false : true;
-        let isY = currentY < neutralY - offset ? false : currentY > neutralY + offset ? false : true;
+        let isY = currentY > neutralY + offset ? false : true;
         let isZ = currentZ < neutralZ - offset ? false : currentZ > neutralZ + offset ? false : true;
         return isX && isY && isZ;
     }
