@@ -30,15 +30,15 @@ class IkObject
         this.hipsControlTarget = this.controlTargets[5];
         this.hipsControlTarget.target.position.z += this.magicNumberToMoveObject;
 
-        chainObjects.push(new ChainObject("RightArm", "RightHand", this.controlTargets[0]));
-        chainObjects.push(new ChainObject("LeftArm", "LeftHand", this.controlTargets[1]));
-        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", this.controlTargets[2]));
-        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", this.controlTargets[3]));
+        chainObjects.push(new ChainObject("Spine", "Head", this.controlTargets[0]));
 
-        chainObjects.push(new ChainObject("Spine", "Head", this.controlTargets[4]));
+        chainObjects.push(new ChainObject("LeftArm", "LeftHand", this.controlTargets[1]));
+        chainObjects.push(new ChainObject("RightArm", "RightHand", this.controlTargets[2]));
+        chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", this.controlTargets[3]));
+        chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", this.controlTargets[4]));
 
         // Adds events to Back control
-        this.applyEventsToBackControl(controlTarget[0][4].control);
+        this.applyEventsToBackControl(controlTarget[0][0].control);
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -115,9 +115,7 @@ class IkObject
         // Adds skeleton helper to scene
         scene.add( skeletonHelper );
         this.calculteBackOffset();
-        let spineRotation = this.chainObjects[4].chain.joints[0].bone.rotation.clone();
-        this.neckRotation = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
-        this.neckRotation.y = -spineRotation.y * 0.4;
+        this.neckInfluence();
     }
 
     // Applies events to back control
@@ -131,9 +129,7 @@ class IkObject
         {
             if(this.enableIk)
             {
-                let spineRotation = this.chainObjects[4].chain.joints[0].bone.rotation.clone();
-                this.neckRotation = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
-                this.neckRotation.y = -spineRotation.y * 0.5;
+                this.neckInfluence();
             }
         });
         backControl.addEventListener("dragging-changed", (event) =>
@@ -146,10 +142,17 @@ class IkObject
         });
     }
 
+    neckInfluence()
+    {
+        let spineRotation = this.chainObjects[0].chain.joints[0].bone.rotation.clone();
+        this.neckRotation = this.chainObjects[0].chain.joints[3].bone.rotation.clone();
+        this.neckRotation.y = -spineRotation.y * 0.5;
+    }
+
     // Calculates back's offset in order to move with hips
     calculteBackOffset()
     {
-        let backPosition = this.chainObjects[4].controlTarget.target.position.clone();
+        let backPosition = this.chainObjects[0].controlTarget.target.position.clone();
         let hipsPosition = this.hipsControlTarget.target.position.clone();
         this.backOffset = backPosition.sub(hipsPosition);
     }
@@ -174,26 +177,26 @@ class IkObject
     // Which have been changed while ik was turned off
     recalculate()
     {
+        let back = this.chainObjects[0].chain.joints[4].bone;
+        let backTarget = this.chainObjects[0].controlTarget.target;
+
         let leftHand = this.chainObjects[1].chain.joints[2].bone;
         let leftHandTarget = this.chainObjects[1].controlTarget.target;
 
-        let rightHand = this.chainObjects[0].chain.joints[2].bone;
-        let rightHandTarget = this.chainObjects[0].controlTarget.target;
+        let rightHand = this.chainObjects[2].chain.joints[2].bone;
+        let rightHandTarget = this.chainObjects[2].controlTarget.target;
 
-        let leftLeg = this.chainObjects[2].chain.joints[2].bone;
-        let leftLegTarget = this.chainObjects[2].controlTarget.target;
+        let leftLeg = this.chainObjects[3].chain.joints[2].bone;
+        let leftLegTarget = this.chainObjects[3].controlTarget.target;
 
-        let rightLeg = this.chainObjects[3].chain.joints[2].bone;
-        let rightLegTarget = this.chainObjects[3].controlTarget.target;
+        let rightLeg = this.chainObjects[4].chain.joints[2].bone;
+        let rightLegTarget = this.chainObjects[4].controlTarget.target;
 
-        let back = this.chainObjects[4].chain.joints[4].bone;
-        let backTarget = this.chainObjects[4].controlTarget.target;
-
+        back.getWorldPosition(backTarget.position);
         leftHand.getWorldPosition(leftHandTarget.position);
         rightHand.getWorldPosition(rightHandTarget.position);
         leftLeg.getWorldPosition(leftLegTarget.position);
         rightLeg.getWorldPosition(rightLegTarget.position);
-        back.getWorldPosition(backTarget.position);
         this.calculteBackOffset();
     }
 
@@ -207,7 +210,7 @@ class IkObject
         // When we are changing back position offset between hips and back shouldn't be applied
         if(!this.applyingOffset)
         {
-            let backTarget = this.chainObjects[4].controlTarget.target;
+            let backTarget = this.chainObjects[0].controlTarget.target;
             let hipsPosition = hipsTarget.position.clone();
             let result = hipsPosition.add(this.backOffset);
             backTarget.position.copy(result);

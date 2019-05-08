@@ -64,8 +64,8 @@ class App
         gltfLoader.loaded = (gltf) =>
         {
             loadedObject = new RagDoll();
-            loadedObject.initObject(gltf.scene, rightHandControl, leftHandControl,
-                                    leftLegControl, rightLegControl, backControl,
+            loadedObject.initObject(gltf.scene, backControl, leftHandControl,
+                                    rightHandControl, leftLegControl, rightLegControl,
                                     hipsControl);
             this.iKObjects.push(loadedObject);
             let ragDollGui = new RagDollGui(loadedObject);

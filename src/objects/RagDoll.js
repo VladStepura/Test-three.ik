@@ -16,27 +16,27 @@ class RagDoll extends IkObject
     {
         super.initObject(scene, controlTarget);
         // Adds gui elements to control objects
-        let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
-        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
+        let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, .35));
+        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, .8, 1.6));
 
-        let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, .35));
-        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, .8, 1.6));
+        let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
+        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
 
         let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 1));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], leftArmPoleTarget));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], leftLegPoleTarget));
-
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[1], rightArmPoleTarget));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[3], rightLegPoleTarget));
 
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[0], backPoleTarget));
-        this.poleConstraints[0].poleAngle = 90;
-        this.poleConstraints[1].poleAngle = -120;
-        this.poleConstraints[1].needStraightening = true;
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[1], leftArmPoleTarget));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], rightArmPoleTarget));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[3], leftLegPoleTarget));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], rightLegPoleTarget));
 
+        this.poleConstraints[1].poleAngle = 90;
         this.poleConstraints[2].poleAngle = 90;
+
         this.poleConstraints[3].poleAngle = -120;
         this.poleConstraints[3].needStraightening = true;
+        this.poleConstraints[4].poleAngle = -120;
+        this.poleConstraints[4].needStraightening = true;
     }
 
     update()
@@ -75,12 +75,12 @@ class RagDoll extends IkObject
     {
         // Makes right foot follow the rotation of target
         let rightFootBone = this.ik.chains[4].joints[2].bone;
-        let rightLegChainTarget = this.chainObjects[3].controlTarget.target;
+        let rightLegChainTarget = this.chainObjects[4].controlTarget.target;
         rightFootBone.rotation.copy(rightLegChainTarget.rotation);
         this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(0.5, 0,0  ));
         // Makes right foot follow the rotation of target
         let leftFootBone = this.ik.chains[3].joints[2].bone;
-        let leftLegChainTarget = this.chainObjects[2].controlTarget.target;
+        let leftLegChainTarget = this.chainObjects[3].controlTarget.target;
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
         this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(0.5, 0,0  ));
     }
@@ -101,10 +101,10 @@ class RagDoll extends IkObject
     {
         if(this.neckRotation)
         {
-            let neck = this.chainObjects[4].chain.joints[3].bone;
+            let neck = this.chainObjects[0].chain.joints[3].bone;
             neck.rotation.copy(this.neckRotation);
 
-            let head = this.chainObjects[4].chain.joints[4].bone;
+            let head = this.chainObjects[0].chain.joints[4].bone;
             this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, 0, 0));
         }
     }
