@@ -4,6 +4,7 @@ import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import TargetControl from "./objects/TargetControl";
 import RagDoll from "./objects/RagDoll";
 import Stats from "stats-js/src/Stats";
+import RagDollGui from "./objects/RagDollGui";
 
 // App is main class which initialises all object and goes through rendering cycle
 class App
@@ -67,6 +68,8 @@ class App
                                     leftLegControl, rightLegControl, backControl,
                                     hipsControl);
             this.iKObjects.push(loadedObject);
+            let ragDollGui = new RagDollGui(loadedObject);
+            ragDollGui.initGui();
         }
         gltfLoader.loadToScene('./assets/male-adult-testforik.glb', scene);
         //#endregion
@@ -75,7 +78,7 @@ class App
     //#region Render loop
     render()
     {
-       // this.stats.begin();
+        this.stats.begin();
         // Goes through all ik objects, update them and solve their ik
         this.iKObjects.forEach((ikObject) =>
         {
@@ -84,7 +87,7 @@ class App
             ikObject.update();
         });
         this.renderer.render(this.scene, this.camera);
-      //  this.stats.end();
+        this.stats.end();
         requestAnimationFrame(() => this.render());
     }
     //#endregion

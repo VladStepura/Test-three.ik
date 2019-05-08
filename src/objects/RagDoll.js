@@ -15,66 +15,28 @@ class RagDoll extends IkObject
     initObject(scene, ...controlTarget)
     {
         super.initObject(scene, controlTarget);
-        this.initializePoleTarget();
         // Adds gui elements to control objects
         let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
         let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
+
+        let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, .35));
+        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, .8, 1.6));
+
         let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 1));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], leftArmPoleTarget));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], leftLegPoleTarget));
+
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[1], rightArmPoleTarget));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[3], rightLegPoleTarget));
+
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[0], backPoleTarget));
         this.poleConstraints[0].poleAngle = 90;
         this.poleConstraints[1].poleAngle = -120;
         this.poleConstraints[1].needStraightening = true;
 
-        this.addGuiElements();
-    }
-
-    // Sets pole targets position
-    initializePoleTarget()
-    {
-        this.poleTargets.backPoleTarget = new THREE.Vector3( 0, 0, 0);
-        this.poleTargets.leftArmPoleTarget = new THREE.Vector3( -90, 45, -90);
-        this.poleTargets.leftLegPoleTarget = new THREE.Vector3( 0, 45, 90);
-    }
-
-    // Adds gui elements to scene
-    // With adding its parameters
-    addGuiElements()
-    {
-        let gui = new Gui();
-        let rightLegTarget = this.chainObjects[3].controlTarget.target;
-        let leftLegTarget = this.chainObjects[2].controlTarget.target;
-        gui.addVectorSlider(rightLegTarget.rotation, "Right target rotation",
-            -Math.PI * 1, Math.PI * 1);
-        gui.addVectorSlider(leftLegTarget.rotation, "Left target rotation",
-            -Math.PI * 1, Math.PI * 1);
-        gui.datGui.add(this, "enableIk").onChange(() =>
-        {
-            if(this.enableIk)
-            {
-                this.recalculate();
-            }
-        });
-
-        this.createGuiForConstraint(this.poleConstraints[0], "Left Arm");
-
-        this.createGuiForConstraint(this.poleConstraints[1], "Left Leg");
-
-        this.createGuiForConstraint(this.poleConstraints[2], "Spine");
-
-        gui.datGui.open();
-    }
-
-    createGuiForConstraint(poleConstraint, name)
-    {
-        let gui = new Gui();
-
-        let pole = poleConstraint.poleTarget.mesh;
-        gui.addVectorSlider(pole.position, name + " Pole Position", -2, 2);
-
-        let folder = gui.datGui.addFolder(name + " Pole");
-        folder.add(poleConstraint, "poleAngle", -360, 360);
+        this.poleConstraints[2].poleAngle = 90;
+        this.poleConstraints[3].poleAngle = -120;
+        this.poleConstraints[3].needStraightening = true;
     }
 
     update()
@@ -94,32 +56,10 @@ class RagDoll extends IkObject
     // Applies pole target to models
     setPoleTargets()
     {
-       /* let backChain = this.ik.chains[0];
-        let backPoleTarget = this.poleTargets.backPoleTarget;*/
-
-        let leftArmChain = this.ik.chains[1];
-        let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
-
-        let leftLegChain = this.ik.chains[3];
-        let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
-
-        //this.chainRotate(backChain, backPoleTarget);
-        this.chainRotate(leftArmChain, leftArmPoleTarget);
-        this.chainRotate(leftLegChain, leftLegPoleTarget);
-
         // Applies blender's pole constraint to left arm
         this.poleConstraints.forEach((poleConstraint) =>
         {
             poleConstraint.apply();
-        });
-    }
-
-    // Rotates whole chain towards position
-    chainRotate(chain, poleTarget)
-    {
-        chain.joints.forEach((joint) =>
-        {
-            joint.bone.lookAt(poleTarget);
         });
     }
 

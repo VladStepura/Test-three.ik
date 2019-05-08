@@ -115,6 +115,9 @@ class IkObject
         // Adds skeleton helper to scene
         scene.add( skeletonHelper );
         this.calculteBackOffset();
+        let spineRotation = this.chainObjects[4].chain.joints[0].bone.rotation.clone();
+        this.neckRotation = this.chainObjects[4].chain.joints[3].bone.rotation.clone();
+        this.neckRotation.y = -spineRotation.y * 0.4;
     }
 
     // Applies events to back control

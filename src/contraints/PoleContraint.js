@@ -62,6 +62,7 @@ class PoleConstraint
             // Cloning bone in order to modify it's position and rotation
             let cloneBone = joint.bone.clone();
             joint.bone.lookAt(polePose);
+          //  joint.bone.rotateX(this.degToRad(this.poleAngle));
             position.setFromMatrixPosition( cloneBone.matrixWorld );
             matrix.lookAt(polePose, position, cloneBone.up);
             let axis = new THREE.Vector3(1, 1, 0);
@@ -122,73 +123,6 @@ class PoleConstraint
         let isZ = currentZ < neutralZ - offset ? false : currentZ > neutralZ + offset ? false : true;
         return isX || isY || isZ;
     }
-    //#region Blender's constraint
-    blendersConstraint()
-    {
-        let joints = this.poleChain.joints;
-        // First bone in chain position
-        let rootPose = joints[0].bone.position.clone();
-        // Last bone in chain position
-        let endPose = joints[joints.length - 1].bone.position.clone();
-        // Pole target position
-        let polePose = this.poleTarget.mesh.position.clone();
-        // Moving target position
-        let goalPose = this.poleChain.target.position.clone();
-
-        this.showOnFirstRun(endPose);
-        let rootMatrix = joints[0].bone.matrix.clone();
-
-        let rootX = this.matrixUnitX(rootMatrix);
-        let rootZ = this.matrixUnitY(rootMatrix);
-
-        this.showOnFirstRun(endPose);
-        // Direction of chain
-        let dir = endPose.sub(rootPose).normalize();
-        // Direction of pole
-        let poleDir = goalPose.sub(rootPose).normalize();
-        // Pole target up
-        let poleUp = polePose.sub(rootPose).normalize();
-        // Chain up
-        let up = rootX.multiplyScalar(Math.cos(this.poleAngle)).add( rootZ.multiplyScalar(Math.sin(this.poleAngle)));
-        // End rotation matrix
-        let endrot = new THREE.Matrix4();
-        // Pole rotation matrix
-        let polerot = new THREE.Matrix4()
-
-        let x = dir.clone();
-        x.multiply(up).normalize();
-        let unitY = x.clone().multiply(dir).normalize();
-        endrot.makeBasis(x, unitY, dir.negate());
-        // for the polar target
-        x = poleDir.clone().multiply(poleUp).normalize();
-        unitY = x.clone().multiply(poleDir).normalize();
-        polerot.makeBasis(x, unitY, poleDir.negate());
-
-        let inverse = endrot;
-
-        this.showOnFirstRun("result: ");
-        let result = polerot.multiply(inverse);
-
-        let rootBone =  joints[0].bone;
-        let oldMatrix = rootBone.matrix;
-        let newMatrix = oldMatrix.multiply(result);
-        this.showOnFirstRun(newMatrix);
-        this.firstRun = false;
-    }
-
-    //#region Getting basis from matrix
-    matrixUnitX(matrix)
-    {
-        let unitX = new THREE.Vector3(matrix.elements[0], matrix.elements[3], matrix.elements[6] );
-        return unitX;
-    }
-
-    matrixUnitY(matrix)
-    {
-        let unitY = new THREE.Vector3(matrix.elements[1], matrix.elements[4], matrix.elements[7] );
-        return unitY;
-    }
-    //#endregion
 
     // Runs console.log only once in lifecycle
     showOnFirstRun(value)
