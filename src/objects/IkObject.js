@@ -146,7 +146,7 @@ class IkObject
     {
         let spineRotation = this.chainObjects[0].chain.joints[0].bone.rotation.clone();
         this.neckRotation = this.chainObjects[0].chain.joints[3].bone.rotation.clone();
-        this.neckRotation.y = -spineRotation.y * 0.5;
+        this.neckRotation.y = -spineRotation.y * 0.5 ;
     }
 
     // Calculates back's offset in order to move with hips

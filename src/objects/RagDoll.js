@@ -103,9 +103,11 @@ class RagDoll extends IkObject
         {
             let neck = this.chainObjects[0].chain.joints[3].bone;
             neck.rotation.copy(this.neckRotation);
-
+            let neckQuanternion = new THREE.Quaternion();
+            neck.getWorldQuaternion(neckQuanternion);
+            
             let head = this.chainObjects[0].chain.joints[4].bone;
-            this.rotateBoneQuaternion(head, new THREE.Euler(-1.3, 0, 0));
+            this.rotateBoneQuaternion(head, new THREE.Euler(-1, 0, 0));
         }
     }
 
