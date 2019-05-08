@@ -11,7 +11,13 @@ class PoleConstraint
         this.firstRun = true;
         this.needStraightening = false;
         this.neutralStatePosition = poleChain.target.position.clone();
-        this.neutralOffset = .35;
+        this.neutralOffset = .6;
+        let rootBone = new THREE.Vector3();
+        poleChain.joints[0].bone.getWorldPosition(rootBone);
+        console.log(poleChain.joints[0].bone);
+        console.log(rootBone);
+        this.startingPositionZ = 1;//Math.round(rootBone.z);
+        console.log(this.startingPositionZ);
     }
 
     addPoleTargetToScene()
@@ -43,9 +49,6 @@ class PoleConstraint
         // Moving target position
         let goalPose = this.poleChain.target.position.clone();
 
-        let angleBetween = polePose.angleTo(rootPose);
-        let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
-
         let disabledPole = false;
         // Blending is needed only for leg right now
         if(this.needStraightening)
@@ -63,13 +66,14 @@ class PoleConstraint
                 disabledPole = true;
             }
 
-            //this.blending(goalPose, polePose);
-
+            this.blending(goalPose, polePose);
             //#endregion
         }
 
         let position = new THREE.Vector3();
         let matrix = new THREE.Matrix4();
+        let angleBetween = polePose.angleTo(rootPose);
+        let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
 
         this.poleChain.joints.forEach((joint) =>
         {
@@ -80,10 +84,9 @@ class PoleConstraint
                 joint.bone.lookAt(polePose);
             }
 
-            joint.bone.rotateX(this.degToRad(this.poleAngle));
             position.setFromMatrixPosition( cloneBone.matrixWorld );
             matrix.lookAt(polePose, position, cloneBone.up);
-            let axis = new THREE.Vector3(1, 1, 0);
+            let axis = new THREE.Vector3(1, 0, 0);
             matrix.makeRotationAxis(axis, angleDiff);
 
             joint.bone.updateWorldMatrix( true, false );
@@ -109,35 +112,29 @@ class PoleConstraint
             let differenceY = goalPose.y - neutralPose.y;
             let differenceZ = goalPose.z - neutralPose.z;
 
-            let legStartingPosition = 1;
-            let maxStartPos = 1.1;
-            let minStartPos = .9;
-            let currentOffset = legStartingPosition + differenceX / smooth + differenceY + differenceZ / smooth;
+            let startingOffset = .1;
+
+            let startingPositionZ = this.startingPositionZ;
+            let maxStartPos = startingPositionZ + startingOffset;
+            let minStartPos = startingPositionZ - startingOffset;
+            let currentOffset = startingPositionZ + differenceX / smooth + differenceY + differenceZ / smooth;
             if(goalPose.y <= neutralPose.y)
             {
-                currentOffset = legStartingPosition + differenceZ / smooth;
+                currentOffset = startingPositionZ + differenceZ / smooth;
                 currentOffset = currentOffset > maxStartPos ? maxStartPos : currentOffset < minStartPos ? currentOffset : currentOffset;
             }
-            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < minStartPos ? legStartingPosition : currentOffset;
+            polePose.z = currentOffset > maxZ ? maxZ : currentOffset < minStartPos ? startingPositionZ : currentOffset;
         }
     }
 
     shouldBeStraight(rootPosition, endPosition, targetPosition)
     {
-        let targetLength = this.getLengthBetweenVectors(rootPosition, targetPosition);
-        let difference = this.poleChain.totalLengths - targetLength;
-        if(this.poleChain.totalLengths >= targetLength )
+        let targetLength = rootPosition.distanceTo(targetPosition);
+        if(this.poleChain.totalLengths > targetLength )
         {
             return false;
         }
         return true;
-    }
-
-    getLengthBetweenVectors(first, second)
-    {
-        return Math.sqrt(Math.pow(second.x - first.x, 2) +
-                             Math.pow(second.y - first.y, 2) +
-                             Math.pow(second.z - first.z, 2));
     }
 
     degToRad(degree)

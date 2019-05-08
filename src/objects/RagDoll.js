@@ -30,12 +30,12 @@ class RagDoll extends IkObject
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[3], leftLegPoleTarget));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], rightLegPoleTarget));
 
-        this.poleConstraints[1].poleAngle = 90;
-        this.poleConstraints[2].poleAngle = 90;
+        this.poleConstraints[1].poleAngle = -40;
+        this.poleConstraints[2].poleAngle = -40;
 
-        this.poleConstraints[3].poleAngle = 0;
+        this.poleConstraints[3].poleAngle = 56;
         this.poleConstraints[3].needStraightening = true;
-        this.poleConstraints[4].poleAngle = 0;
+        this.poleConstraints[4].poleAngle = 56;
         this.poleConstraints[4].needStraightening = true;
     }
 
