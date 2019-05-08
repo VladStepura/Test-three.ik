@@ -19,11 +19,14 @@ class RagDoll extends IkObject
         // Adds gui elements to control objects
         let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
         let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
+        let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 1));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], leftArmPoleTarget));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], leftLegPoleTarget));
+        this.poleConstraints.push(new PoleConstraint(this.ik.chains[0], backPoleTarget));
         this.poleConstraints[0].poleAngle = 90;
         this.poleConstraints[1].poleAngle = -120;
-        this.poleConstraints[1].isLeg = true;
+        this.poleConstraints[1].needStraightening = true;
+
         this.addGuiElements();
     }
 
@@ -53,17 +56,25 @@ class RagDoll extends IkObject
                 this.recalculate();
             }
         });
-        let leftArmPole = this.poleConstraints[0].poleTarget.mesh;
-        gui.addVectorSlider(leftArmPole.position, "Left Arm Pole Position", -2, 2);
 
-        let leftLegPole = this.poleConstraints[1].poleTarget.mesh;
-        gui.addVectorSlider(leftLegPole.position, "Left Leg Pole Position", -2, 2);
+        this.createGuiForConstraint(this.poleConstraints[0], "Left Arm");
 
-        let armFolder = gui.datGui.addFolder("LeftArmPole");
-        armFolder.add(this.poleConstraints[0], "poleAngle", -360, 360);
-        let legFolder = gui.datGui.addFolder("LeftLegPole");
-        legFolder.add(this.poleConstraints[1], "poleAngle", -360, 360);
+        this.createGuiForConstraint(this.poleConstraints[1], "Left Leg");
+
+        this.createGuiForConstraint(this.poleConstraints[2], "Spine");
+
         gui.datGui.open();
+    }
+
+    createGuiForConstraint(poleConstraint, name)
+    {
+        let gui = new Gui();
+
+        let pole = poleConstraint.poleTarget.mesh;
+        gui.addVectorSlider(pole.position, name + " Pole Position", -2, 2);
+
+        let folder = gui.datGui.addFolder(name + " Pole");
+        folder.add(poleConstraint, "poleAngle", -360, 360);
     }
 
     update()
@@ -83,8 +94,8 @@ class RagDoll extends IkObject
     // Applies pole target to models
     setPoleTargets()
     {
-        let backChain = this.ik.chains[0];
-        let backPoleTarget = this.poleTargets.backPoleTarget;
+       /* let backChain = this.ik.chains[0];
+        let backPoleTarget = this.poleTargets.backPoleTarget;*/
 
         let leftArmChain = this.ik.chains[1];
         let leftArmPoleTarget = this.poleTargets.leftArmPoleTarget;
@@ -92,7 +103,7 @@ class RagDoll extends IkObject
         let leftLegChain = this.ik.chains[3];
         let leftLegPoleTarget = this.poleTargets.leftLegPoleTarget;
 
-        this.chainRotate(backChain, backPoleTarget);
+        //this.chainRotate(backChain, backPoleTarget);
         this.chainRotate(leftArmChain, leftArmPoleTarget);
         this.chainRotate(leftLegChain, leftLegPoleTarget);
 

@@ -3,6 +3,7 @@ import {OrbitControls} from "./utils/OrbitControls";
 import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import TargetControl from "./objects/TargetControl";
 import RagDoll from "./objects/RagDoll";
+import Stats from "stats-js/src/Stats";
 
 // App is main class which initialises all object and goes through rendering cycle
 class App
@@ -10,10 +11,14 @@ class App
     constructor()
     {
         this.iKObjects = [];
+        this.stats = new Stats();
+        this.stats.showPanel( 0 );
     }
     // Initialize main app
     initialize()
     {
+        document.body.appendChild( this.stats.dom );
+
         //#region Three js Initialization
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0.3,0.3,0.3);
@@ -70,6 +75,7 @@ class App
     //#region Render loop
     render()
     {
+       // this.stats.begin();
         // Goes through all ik objects, update them and solve their ik
         this.iKObjects.forEach((ikObject) =>
         {
@@ -78,7 +84,7 @@ class App
             ikObject.update();
         });
         this.renderer.render(this.scene, this.camera);
-
+      //  this.stats.end();
         requestAnimationFrame(() => this.render());
     }
     //#endregion

@@ -9,7 +9,7 @@ class PoleConstraint
         this.poleAngle = 90;
         this.addPoleTargetToScene();
         this.firstRun = true;
-        this.isLeg = false;
+        this.needStraightening = false;
         this.neutralStatePosition = poleChain.target.position.clone();
         this.neutralOffset = .35;
     }
@@ -47,9 +47,12 @@ class PoleConstraint
         let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
 
         // Blending is needed only for leg right now
-        if(this.isLeg)
+        if(this.needStraightening)
         {
             this.blending(goalPose, polePose);
+            let worldPosition = new THREE.Vector3();
+            joints[0].bone.getWorldPosition(worldPosition)
+            this.showOnFirstRun(worldPosition.y);
         }
 
         let position = new THREE.Vector3();
@@ -86,6 +89,7 @@ class PoleConstraint
             let differenceX = Math.abs(goalPose.x - neutralPose.x);
             let differenceY = goalPose.y - neutralPose.y;
             let differenceZ = goalPose.z - neutralPose.z;
+
             let legStartingPosition = 1;
             let maxStartPos = 1.1;
             let minStartPos = .9;
