@@ -6,7 +6,7 @@ class PoleConstraint
     {
         this.poleChain = poleChain;
         this.poleTarget = poleTarget;
-        this.poleAngle = 90;
+        this.poleAngle = 0;
         this.addPoleTargetToScene();
         this.firstRun = true;
         this.needStraightening = false;
@@ -46,23 +46,41 @@ class PoleConstraint
         let angleBetween = polePose.angleTo(rootPose);
         let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
 
+        let disabledPole = false;
         // Blending is needed only for leg right now
         if(this.needStraightening)
         {
-            this.blending(goalPose, polePose);
-            let worldPosition = new THREE.Vector3();
-            joints[0].bone.getWorldPosition(worldPosition)
-            this.showOnFirstRun(worldPosition.y);
+            //#region Straight leg check
+            let rootPosition = new THREE.Vector3();
+            let endPosition = new THREE.Vector3();
+            let goalPosition = new THREE.Vector3();
+            joints[joints.length - 1].bone.getWorldPosition(endPosition);
+            joints[0].bone.getWorldPosition(rootPosition);
+            this.poleChain.target.getWorldPosition(goalPosition);
+            let shouldBeStraight = this.shouldBeStraight(rootPosition, endPosition, goalPosition);
+            if(shouldBeStraight)
+            {
+                disabledPole = true;
+            }
+
+            //this.blending(goalPose, polePose);
+
+            //#endregion
         }
 
         let position = new THREE.Vector3();
         let matrix = new THREE.Matrix4();
+
         this.poleChain.joints.forEach((joint) =>
         {
             // Cloning bone in order to modify it's position and rotation
             let cloneBone = joint.bone.clone();
-            joint.bone.lookAt(polePose);
-          //  joint.bone.rotateX(this.degToRad(this.poleAngle));
+            if(!disabledPole)
+            {
+                joint.bone.lookAt(polePose);
+            }
+
+            joint.bone.rotateX(this.degToRad(this.poleAngle));
             position.setFromMatrixPosition( cloneBone.matrixWorld );
             matrix.lookAt(polePose, position, cloneBone.up);
             let axis = new THREE.Vector3(1, 1, 0);
@@ -102,6 +120,24 @@ class PoleConstraint
             }
             polePose.z = currentOffset > maxZ ? maxZ : currentOffset < minStartPos ? legStartingPosition : currentOffset;
         }
+    }
+
+    shouldBeStraight(rootPosition, endPosition, targetPosition)
+    {
+        let targetLength = this.getLengthBetweenVectors(rootPosition, targetPosition);
+        let difference = this.poleChain.totalLengths - targetLength;
+        if(this.poleChain.totalLengths >= targetLength )
+        {
+            return false;
+        }
+        return true;
+    }
+
+    getLengthBetweenVectors(first, second)
+    {
+        return Math.sqrt(Math.pow(second.x - first.x, 2) +
+                             Math.pow(second.y - first.y, 2) +
+                             Math.pow(second.z - first.z, 2));
     }
 
     degToRad(degree)

@@ -26,11 +26,11 @@ class RagDollGui
             }
         });
 
-        this.createGuiForConstraint(ragDoll.poleConstraints[0], "Left Arm");
+        this.createGuiForConstraint(ragDoll.poleConstraints[1], "Left Arm");
 
-        this.createGuiForConstraint(ragDoll.poleConstraints[1], "Left Leg");
+        this.createGuiForConstraint(ragDoll.poleConstraints[3], "Left Leg");
 
-        this.createGuiForConstraint(ragDoll.poleConstraints[2], "Spine");
+        this.createGuiForConstraint(ragDoll.poleConstraints[0], "Spine");
 
         gui.datGui.open();
     }
