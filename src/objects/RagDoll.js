@@ -10,6 +10,8 @@ class RagDoll extends IkObject
     {
         super();
         this.poleConstraints = [];
+        this.poleTargetOffsets = {};
+        this.hipsMouseDown = false;
     }
 
     initObject(scene, ...controlTarget)
@@ -37,6 +39,7 @@ class RagDoll extends IkObject
         this.poleConstraints[3].needStraightening = true;
         this.poleConstraints[4].poleAngle = 56;
         this.poleConstraints[4].needStraightening = true;
+        this.addHipsEvent();
     }
 
     update()
@@ -96,6 +99,67 @@ class RagDoll extends IkObject
         bone.quaternion.copy(quaternion);
     }
 
+    addHipsEvent()
+    {
+        let hipsControl = this.hipsControlTarget.control;
+        let hipsTarget = this.hipsControlTarget.target;
+
+        hipsControl.addEventListener("mouseDown", (event) =>
+        {
+            this.hipsMouseDown = true;
+
+            let backConstraint = this.poleConstraints[0].poleTarget.mesh.position.clone();
+            this.poleTargetOffsets.back = backConstraint.sub(hipsTarget.position);
+
+            let leftArmConstraint = this.poleConstraints[1].poleTarget.mesh.position.clone();
+            this.poleTargetOffsets.leftArm = leftArmConstraint.sub(hipsTarget.position);
+
+            let rightArmConstraint = this.poleConstraints[2].poleTarget.mesh.position.clone();
+            this.poleTargetOffsets.rightArm = rightArmConstraint.sub(hipsTarget.position);
+
+            let leftLegConstraint = this.poleConstraints[3].poleTarget.mesh.position.clone();
+            this.poleTargetOffsets.leftLeg = leftLegConstraint.sub(hipsTarget.position);
+
+            let rightLegConstraint = this.poleConstraints[4].poleTarget.mesh.position.clone();
+            this.poleTargetOffsets.rightLeg = rightLegConstraint.sub(hipsTarget.position);
+
+        });
+        hipsControl.addEventListener("change", (event) =>
+        {
+            if(this.hipsMouseDown)
+            {
+                let hipsPosition = hipsTarget.position.clone();
+                hipsPosition.add(this.poleTargetOffsets.back);
+                this.poleConstraints[0].poleTarget.mesh.position.copy(hipsPosition);
+
+                hipsPosition = hipsTarget.position.clone();
+                hipsPosition.add(this.poleTargetOffsets.leftArm);
+                this.poleConstraints[1].poleTarget.mesh.position.copy(hipsPosition);
+
+                hipsPosition = hipsTarget.position.clone();
+                hipsPosition.add(this.poleTargetOffsets.rightArm);
+                this.poleConstraints[2].poleTarget.mesh.position.copy(hipsPosition);
+
+                hipsPosition = hipsTarget.position.clone();
+                hipsPosition.add(this.poleTargetOffsets.leftLeg);
+                this.poleConstraints[3].poleTarget.mesh.position.copy(hipsPosition);
+
+                hipsPosition = hipsTarget.position.clone();
+                hipsPosition.add(this.poleTargetOffsets.rightLeg);
+                this.poleConstraints[4].poleTarget.mesh.position.copy(hipsPosition);
+            }
+        });
+        hipsControl.addEventListener("dragging-changed", (event) =>
+        {
+            this.calculteBackOffset();
+        });
+        hipsControl.addEventListener("mouseUp", (event) =>
+        {
+            this.applyingOffset = false;
+            this.hipsMouseDown = false;
+        });
+    }
+
     // Applies head rotation
     applyHeadRotation()
     {
@@ -105,7 +169,7 @@ class RagDoll extends IkObject
             neck.rotation.copy(this.neckRotation);
             let neckQuanternion = new THREE.Quaternion();
             neck.getWorldQuaternion(neckQuanternion);
-            
+
             let head = this.chainObjects[0].chain.joints[4].bone;
             this.rotateBoneQuaternion(head, new THREE.Euler(-1, 0, 0));
         }

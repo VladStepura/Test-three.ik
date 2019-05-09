@@ -66,7 +66,7 @@ class PoleConstraint
                 disabledPole = true;
             }
 
-            this.blending(goalPose, polePose);
+            //this.blending(goalPose, polePose);
             //#endregion
         }
 
