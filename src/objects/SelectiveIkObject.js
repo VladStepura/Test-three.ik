@@ -94,14 +94,11 @@ class SelectiveIkObject
 
         if(bone.children.length === 0)
         {
-            console.log("Target setted");
-
             chain.add(joint, {target});
         }
 
         if(bone.children.length !== 0)
         {
-
             chain.add(joint);
             this.addtoChainThroughBones(chain, bone.children[0]);
         }

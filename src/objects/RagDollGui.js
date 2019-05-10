@@ -5,6 +5,7 @@ class RagDollGui
     constructor(ragDoll)
     {
         this.ragDoll = ragDoll;
+        this.poleConstraintsVisible = true;
     }
 
     initGui()
@@ -19,11 +20,15 @@ class RagDollGui
             -Math.PI * 1, Math.PI * 1);
         gui.datGui.add(ragDoll, "enableIk").onChange(() =>
         {
-
             if(ragDoll.enableIk)
             {
                 ragDoll.recalculate();
             }
+        });
+
+        gui.datGui.add(this, "poleConstraintsVisible").onChange(()=>
+        {
+            this.changePoleContraintVisbility(this.poleConstraintsVisible);
         });
 
         this.createGuiForConstraint(ragDoll.poleConstraints[1], "Left Arm");
@@ -41,9 +46,17 @@ class RagDollGui
 
         let pole = poleConstraint.poleTarget.mesh;
         gui.addVectorSlider(pole.position, name + " Pole Position", -2, 2);
-        console.log("Gui initialized");
+
         let folder = gui.datGui.addFolder(name + " Pole");
         folder.add(poleConstraint, "poleAngle", -360, 360);
+    }
+
+    changePoleContraintVisbility(state)
+    {
+        this.ragDoll.poleConstraints.forEach((constraint) =>
+        {
+            constraint.poleTarget.mesh.visible = state;
+        });
     }
 }
 export default RagDollGui;

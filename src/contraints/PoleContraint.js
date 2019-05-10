@@ -14,10 +14,7 @@ class PoleConstraint
         this.neutralOffset = .6;
         let rootBone = new THREE.Vector3();
         poleChain.joints[0].bone.getWorldPosition(rootBone);
-        console.log(poleChain.joints[0].bone);
-        console.log(rootBone);
         this.startingPositionZ = 1;//Math.round(rootBone.z);
-        console.log(this.startingPositionZ);
     }
 
     addPoleTargetToScene()
@@ -84,12 +81,16 @@ class PoleConstraint
                 joint.bone.lookAt(polePose);
             }
 
+            //cloneBone.rotateX(angleDiff);
+
             position.setFromMatrixPosition( cloneBone.matrixWorld );
             matrix.lookAt(polePose, position, cloneBone.up);
             let axis = new THREE.Vector3(1, 0, 0);
             matrix.makeRotationAxis(axis, angleDiff);
 
-            joint.bone.updateWorldMatrix( true, false );
+            cloneBone.updateWorldMatrix( true, false );
+           // joint.bone.quaternion.copy(cloneBone.quaternion);
+           // joint.bone.rotation.x = cloneBone.rotation.x;
             let parent = cloneBone.parent;
             if ( parent )
             {
@@ -116,7 +117,7 @@ class PoleConstraint
 
             let startingPositionZ = this.startingPositionZ;
             let maxStartPos = startingPositionZ + startingOffset;
-            let minStartPos = startingPositionZ - startingOffset;
+            let minStartPos = startingPositionZ - startingOffset + 0.03;
             let currentOffset = startingPositionZ + differenceX / smooth + differenceY + differenceZ / smooth;
             if(goalPose.y <= neutralPose.y)
             {
