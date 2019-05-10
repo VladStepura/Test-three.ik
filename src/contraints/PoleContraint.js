@@ -47,6 +47,7 @@ class PoleConstraint
         let goalPose = this.poleChain.target.position.clone();
 
         let disabledPole = false;
+        let poleAngle = this.poleAngle;
         // Blending is needed only for leg right now
         if(this.needStraightening)
         {
@@ -57,48 +58,53 @@ class PoleConstraint
             joints[joints.length - 1].bone.getWorldPosition(endPosition);
             joints[0].bone.getWorldPosition(rootPosition);
             this.poleChain.target.getWorldPosition(goalPosition);
-            let shouldBeStraight = this.shouldBeStraight(rootPosition, endPosition, goalPosition);
+            let shouldBeStraight = this.shouldBeStraight(rootPosition, endPosition, goalPosition, poleAngle);
             if(shouldBeStraight)
             {
                 disabledPole = true;
             }
-
-            //this.blending(goalPose, polePose);
-            //#endregion
         }
 
-        let position = new THREE.Vector3();
-        let matrix = new THREE.Matrix4();
         let angleBetween = polePose.angleTo(rootPose);
-        let angleDiff = this.degToRad(this.poleAngle) - angleBetween;
+        let angleDiff = this.degToRad(poleAngle) - angleBetween;
 
-        this.poleChain.joints.forEach((joint) =>
+        for(let i = 0; i < joints.length; i++)
         {
+            let joint = joints[i];
+            let position = new THREE.Vector3();
+            let matrix = new THREE.Matrix4();
             // Cloning bone in order to modify it's position and rotation
             let cloneBone = joint.bone.clone();
-            if(!disabledPole)
+            matrix = cloneBone.matrix;
+           // if (!disabledPole)
             {
-                joint.bone.lookAt(polePose);
+                position.setFromMatrixPosition(cloneBone.matrix);
+                matrix.lookAt(polePose, position, cloneBone.up);
+                let axis = new THREE.Vector3(1, 0, 0);
+                matrix.makeRotationAxis(axis, angleDiff);
+                cloneBone.quaternion.setFromRotationMatrix( matrix );
+                cloneBone.rotation.setFromRotationMatrix(matrix);
             }
 
-            //cloneBone.rotateX(angleDiff);
+           // joint.bone.rotation.copy(cloneBone.rotation);
 
-            position.setFromMatrixPosition( cloneBone.matrixWorld );
-            matrix.lookAt(polePose, position, cloneBone.up);
+            let jointMatrix = new THREE.Matrix4();
+            let angleBetween = joint.bone.quaternion.angleTo(cloneBone.quaternion);
             let axis = new THREE.Vector3(1, 0, 0);
-            matrix.makeRotationAxis(axis, angleDiff);
+            jointMatrix.makeRotationAxis(axis, angleBetween);
+            jointMatrix.multiply(matrix);
+            joint.bone.quaternion.setFromRotationMatrix(jointMatrix);
+            joint.bone.rotation.setFromRotationMatrix(jointMatrix);
 
-            cloneBone.updateWorldMatrix( true, false );
-           // joint.bone.quaternion.copy(cloneBone.quaternion);
-           // joint.bone.rotation.x = cloneBone.rotation.x;
+            joint.bone.updateMatrixWorld(true, false);
             let parent = cloneBone.parent;
             if ( parent )
             {
-                matrix.extractRotation( parent.matrixWorld );
+                matrix.extractRotation( parent.matrix );
                 cloneBone.quaternion.setFromRotationMatrix( matrix );
                 joint.bone.quaternion.premultiply( cloneBone.quaternion.inverse() );
             }
-        });
+        }
     }
     // Blends between neutral position of element and constrained position
     blending(goalPose, polePose)
@@ -128,10 +134,17 @@ class PoleConstraint
         }
     }
 
-    shouldBeStraight(rootPosition, endPosition, targetPosition)
+    shouldBeStraight(rootPosition, endPosition, targetPosition, poleAngle)
     {
         let targetLength = rootPosition.distanceTo(targetPosition);
-        if(this.poleChain.totalLengths > targetLength )
+        let totalChainLength = this.poleChain.totalLengths;
+        let difference = totalChainLength - targetLength;
+        //let maxAngle = this.poleAngle;
+//
+        //poleAngle = poleAngle - 2 / difference;
+        //poleAngle = poleAngle > maxAngle ? maxAngle : poleAngle;
+
+        if(totalChainLength > targetLength )
         {
             return false;
         }
