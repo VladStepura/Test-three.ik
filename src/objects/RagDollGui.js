@@ -48,7 +48,7 @@ class RagDollGui
         gui.addVectorSlider(pole.position, name + " Pole Position", -2, 2);
 
         let folder = gui.datGui.addFolder(name + " Pole");
-        folder.add(poleConstraint, "poleAngle", -360, 360);
+        folder.add(poleConstraint, "poleAngle", -180, 180);
     }
 
     changePoleContraintVisbility(state)

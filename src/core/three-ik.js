@@ -534,6 +534,7 @@ var IKChain = function () {
     this.tolerance = 0.01;
     this._depth = -1;
     this._targetPosition = new three.Vector3();
+    this.chainConstraint = null;
   }
   createClass(IKChain, [{
     key: 'add',
@@ -562,6 +563,7 @@ var IKChain = function () {
           previousJoint._updateMatrixWorld();
           previousJoint._updateWorldPosition();
           joint._updateWorldPosition();
+
           var distance = previousJoint._getWorldDistance(joint);
           if (distance === 0) {
             throw new Error('bone with 0 distance between adjacent bone found');
@@ -685,6 +687,10 @@ var IKChain = function () {
         var direction = nextJoint._getWorldDirection(joint);
         joint._setDirection(direction);
         joint._applyConstraints();
+        if(this.chainConstraint !== null)
+        {
+          this.chainConstraint(joint);
+        }
         direction.copy(joint._direction);
         if (!(this.base === joint && joint._isSubBase)) {
           joint._applyWorldPosition();
