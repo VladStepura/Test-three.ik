@@ -680,7 +680,8 @@ var IKChain = function () {
       if (!this.base._isSubBase) {
         this.base._setWorldPosition(this.origin);
       }
-      for (var i = 0; i < this.joints.length - 1; i++) {
+      for (var i = 0; i < this.joints.length - 1; i++)
+      {
         var joint = this.joints[i];
         var nextJoint = this.joints[i + 1];
         var jointWorldPosition = joint._getWorldPosition();
@@ -702,7 +703,9 @@ var IKChain = function () {
           }
           nextJoint._applyWorldPosition();
         }
+
       }
+
       return this._getDistanceFromTarget();
     }
   }]);

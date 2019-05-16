@@ -124,45 +124,16 @@ class PoleConstraint
         {
             let joints = this.poleChain.joints;
             let rootBone = joints[0].bone;
-            let endBone = joints[joints.length - 1].bone;
 
             let rootGlobalPose = new THREE.Vector3();
             rootBone.getWorldPosition(rootGlobalPose);
 
-            let endGlobalPose = new THREE.Vector3();
-            endBone.getWorldPosition(endGlobalPose);
-
-/*
-            let Z_AXIS$1 = new THREE.Vector3(0, 0, -1);
-            let t1$1 = new THREE.Vector3();
-            let t2$1 = new THREE.Vector3();
-            let t3$1 = new THREE.Vector3();
-            let RAD2DEG$1 = THREE.Math.RAD2DEG;
-
-            let axis = new THREE.Vector3().subVectors(rootGlobalPose, endGlobalPose).negate();
-            let angleRoot = this.currentPoleAngle();
-
-
-            let parentDirection = joint._localToWorldDirection(t1$1.copy(Z_AXIS$1)).normalize();
-            let rotationPlaneNormal = joint._localToWorldDirection(t2$1.copy(joint._originalHinge)).normalize();
-            this.rotationPlane.normal = rotationPlaneNormal;
-            let projectedDir = this.rotationPlane.projectPoint(direction, new THREE.Vector3());
-            let parentDirectionProjected = this.rotationPlane.projectPoint(parentDirection, t3$1);
-            let currentAngle = projectedDir.angleTo(parentDirectionProjected) * RAD2DEG$1;
-
-            if(this.degToRad(currentAngle) < angleRoot )
-            {
-                direction.applyAxisAngle(axis, angleRoot);
-            }
-*/
-
             let direction = new THREE.Vector3().copy(joint._getDirection());
 
-            let p1 = endGlobalPose;
+            let p1 = this.poleChain.target.position.clone();
             let p2 = rootGlobalPose;
-            let target = this.poleTarget.mesh.position;
+            let target = this.poleTarget.mesh.position.clone();
 
-            let axis = new THREE.Vector3().subVectors(p1, p2);
             let projectedPole = this.projectPointOnLine(p1, p2, target);
             let xAxis = new THREE.Vector3().subVectors(target, projectedPole).normalize();
             let yAxis = new THREE.Vector3().subVectors(p1, projectedPole).normalize();
@@ -170,19 +141,19 @@ class PoleConstraint
 
             let TBN = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
 
-            let boneDirectionProjected = new THREE.Vector3().copy(direction).applyMatrix4(TBN);
-            let radius = direction.lengthSq();
-
+            let inversedTBN = new THREE.Matrix4().getInverse(TBN);
+            let boneDirectionProjected = new THREE.Vector3().copy(direction).applyMatrix4(inversedTBN);
+            let radius = direction.length();
             let boneDirectionXZ = new THREE.Vector2(boneDirectionProjected.x, boneDirectionProjected.z);
 
-            let angleToPlane = boneDirectionXZ.angle();
-            console.log(this.radToDeg(angleToPlane));
-            boneDirectionXZ.rotateAround(new THREE.Vector2(axis.x, axis.z), angleToPlane);
+            let angleToPlane = -boneDirectionXZ.angle() + this.degToRad(this.poleAngle);
+            boneDirectionXZ.rotateAround(new THREE.Vector2(0, 0), angleToPlane);
+
             boneDirectionProjected.x = boneDirectionXZ.x;
             boneDirectionProjected.z = boneDirectionXZ.y;
 
-            let inversedTBN = new THREE.Matrix4().getInverse(TBN);
-            boneDirectionProjected = boneDirectionProjected.applyMatrix4(inversedTBN);
+
+            boneDirectionProjected = boneDirectionProjected.applyMatrix4(TBN);
             boneDirectionProjected.setLength(radius);
 
             direction.copy(boneDirectionProjected);
