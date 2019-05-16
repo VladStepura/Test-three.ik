@@ -17,7 +17,7 @@ class TargetControl
     {
         let movingTarget = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.4 }));
         movingTarget.position.z = position.z;
-        movingTarget.position.y = position.y;;
+        movingTarget.position.y = position.y;
         movingTarget.position.x = position.x;
         scene.add(movingTarget);
 
