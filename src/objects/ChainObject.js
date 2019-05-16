@@ -17,20 +17,5 @@ class ChainObject
         this.currentJoint = 0;
         this.constraints = [];
     }
-
-    // Takes constraint for current joint
-    getCurrentConstraint()
-    {
-        let constraintForCurrentJoint = this.constraints[this.currentJoint];
-        this.currentJoint++;
-        return constraintForCurrentJoint === undefined ? this.defaultConstraint : constraintForCurrentJoint;
-    }
-
-    // Sets constraints for joints
-    setConstraints(...args)
-    {
-        this.constraints = args;
-    }
-
 }
 export default ChainObject;

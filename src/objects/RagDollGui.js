@@ -23,7 +23,7 @@ class RagDollGui
         {
             if(ragDoll.enableIk)
             {
-                ragDoll.recalculate();
+                this.recalculate();
             }
         });
 
@@ -58,6 +58,35 @@ class RagDollGui
         {
             constraint.poleTarget.mesh.visible = state;
         });
+    }
+
+    // Recalculates positions of transform controls
+    // It works when ik is disable and when enabled in order to recalculate all position
+    // Which have been changed while ik was turned off
+    recalculate()
+    {
+        let ragdoll = this.ragDoll;
+        let back = ragdoll.chainObjects[0].chain.joints[4].bone;
+        let backTarget = ragdoll.chainObjects[0].controlTarget.target;
+
+        let leftHand = ragdoll.chainObjects[1].chain.joints[2].bone;
+        let leftHandTarget = ragdoll.chainObjects[1].controlTarget.target;
+
+        let rightHand = ragdoll.chainObjects[2].chain.joints[2].bone;
+        let rightHandTarget = ragdoll.chainObjects[2].controlTarget.target;
+
+        let leftLeg = ragdoll.chainObjects[3].chain.joints[2].bone;
+        let leftLegTarget = ragdoll.chainObjects[3].controlTarget.target;
+
+        let rightLeg = ragdoll.chainObjects[4].chain.joints[2].bone;
+        let rightLegTarget = ragdoll.chainObjects[4].controlTarget.target;
+
+        back.getWorldPosition(backTarget.position);
+        leftHand.getWorldPosition(leftHandTarget.position);
+        rightHand.getWorldPosition(rightHandTarget.position);
+        leftLeg.getWorldPosition(leftLegTarget.position);
+        rightLeg.getWorldPosition(rightLegTarget.position);
+        ragdoll.calculteBackOffset();
     }
 }
 export default RagDollGui;

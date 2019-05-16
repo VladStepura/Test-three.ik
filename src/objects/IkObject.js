@@ -9,7 +9,6 @@ class IkObject
     constructor()
     {
         this.applyingOffset = false;
-        this.magicNumberToMoveObject = 1;
         this.neckRotation = null;
         this.enableIk = true;
         this.controlTargets = [];
@@ -73,8 +72,6 @@ class IkObject
                     {
                         let chain = chainObject.chain;
 
-                        // Acquires constraint for current object
-                        let constraints = chainObject.getCurrentConstraint();
                         // Checks if root object
                         if(object.name === chainObject.baseObjectName)
                         {
@@ -92,7 +89,7 @@ class IkObject
                             chainObject.isChainObjectStarted = false
                         }
                         // Creates joint by passing current bone and its constraint
-                        let joint = new IKJoint(object, {constraints});
+                        let joint = new IKJoint(object, {});
                         // Adds joint to chain and sets target
                         chain.add(joint, {target});
 
@@ -143,7 +140,7 @@ class IkObject
     {
         let spineRotation = this.chainObjects[0].chain.joints[0].bone.rotation.clone();
         this.neckRotation = this.chainObjects[0].chain.joints[3].bone.rotation.clone();
-        this.neckRotation.y = -spineRotation.y * 0.5 ;
+        this.neckRotation.y = -spineRotation.y * 0.5;
     }
 
     // Calculates back's offset in order to move with hips
@@ -164,34 +161,6 @@ class IkObject
             this.ik.solve();
         }
         this.lateUpdate();
-    }
-
-    // Recalculates positions of transform controls
-    // It works when ik is disable and when enabled in order to recalculate all position
-    // Which have been changed while ik was turned off
-    recalculate()
-    {
-        let back = this.chainObjects[0].chain.joints[4].bone;
-        let backTarget = this.chainObjects[0].controlTarget.target;
-
-        let leftHand = this.chainObjects[1].chain.joints[2].bone;
-        let leftHandTarget = this.chainObjects[1].controlTarget.target;
-
-        let rightHand = this.chainObjects[2].chain.joints[2].bone;
-        let rightHandTarget = this.chainObjects[2].controlTarget.target;
-
-        let leftLeg = this.chainObjects[3].chain.joints[2].bone;
-        let leftLegTarget = this.chainObjects[3].controlTarget.target;
-
-        let rightLeg = this.chainObjects[4].chain.joints[2].bone;
-        let rightLegTarget = this.chainObjects[4].controlTarget.target;
-
-        back.getWorldPosition(backTarget.position);
-        leftHand.getWorldPosition(leftHandTarget.position);
-        rightHand.getWorldPosition(rightHandTarget.position);
-        leftLeg.getWorldPosition(leftLegTarget.position);
-        rightLeg.getWorldPosition(rightLegTarget.position);
-        this.calculteBackOffset();
     }
 
     // Updates which is called last after all stuff in loop has been done
