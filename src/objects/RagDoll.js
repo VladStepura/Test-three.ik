@@ -52,7 +52,6 @@ class RagDoll extends IkObject
         this.lateUpdate();
     }
 
-
     lateUpdate()
     {
         this.legsFollowTargetRotation();

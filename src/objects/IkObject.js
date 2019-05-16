@@ -163,9 +163,6 @@ class IkObject
     {
         if(this.enableIk)
         {
-            // Pole target needs to be applied before ik
-            // in order to changer figure parameters
-            this.setPoleTargets();
             // Solves the inverse kinematic of object
             this.ik.solve();
         }
