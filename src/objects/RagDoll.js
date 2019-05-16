@@ -1,7 +1,6 @@
 import IkObject from "./IkObject";
 import * as THREE from "three";
-import Gui from "./Gui";
-import PoleConstraint from "../contraints/PoleContraint";
+import PoleConstraint from "../contraints/PoleConstraint";
 import PoleTarget from "./PoleTarget";
 
 class RagDoll extends IkObject
@@ -18,13 +17,13 @@ class RagDoll extends IkObject
     {
         super.initObject(scene, controlTarget);
         // Adds gui elements to control objects
-        let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, .35));
-        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, 1.2, 2));
+        let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, -.35));
+        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, 1.2, 1));
 
-        let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
-        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, 1.2, 2));
+        let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, -.35));
+        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, 1.2, 1));
 
-        let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 1));
+        let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 0));
 
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[0], backPoleTarget));
         this.poleConstraints.push(new PoleConstraint(this.ik.chains[1], leftArmPoleTarget));
@@ -34,10 +33,6 @@ class RagDoll extends IkObject
 
         this.poleConstraints[0].poleAngle = 128;
 
-        this.poleConstraints[1].applyPoleConstraint = true;
-        this.poleConstraints[2].applyPoleConstraint = true;
-        this.poleConstraints[3].applyPoleConstraint = true;
-        this.poleConstraints[4].applyPoleConstraint = true;
         this.addHipsEvent();
     }
 

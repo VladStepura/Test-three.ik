@@ -1,4 +1,4 @@
-import {IK, IKBallConstraint, IKChain, IKHelper, IKHingeConstraint, IKJoint} from "../core/three-ik";
+import {IK, IKJoint} from "../core/three-ik";
 import * as THREE from "three";
 import setZForward from "../utils/axisUtils";
 import ChainObject from "./ChainObject";
@@ -10,7 +10,6 @@ class IkObject
     {
         this.applyingOffset = false;
         this.magicNumberToMoveObject = 1;
-        this.poleTargets = {};
         this.neckRotation = null;
         this.enableIk = true;
         this.controlTargets = [];
@@ -28,7 +27,6 @@ class IkObject
         let chainObjects = [];
         this.chainObjects = chainObjects;
         this.hipsControlTarget = this.controlTargets[5];
-        this.hipsControlTarget.target.position.z += this.magicNumberToMoveObject;
 
         chainObjects.push(new ChainObject("Spine", "Head", this.controlTargets[0]));
 
@@ -91,7 +89,6 @@ class IkObject
                         {
                             target = chainObject.controlTarget.target;
                             object.getWorldPosition(target.position)
-                            target.position.z += this.magicNumberToMoveObject;
                             chainObject.isChainObjectStarted = false
                         }
                         // Creates joint by passing current bone and its constraint
@@ -214,7 +211,6 @@ class IkObject
         }
         // Follows hips target
         this.hips.position.copy(hipsTarget.position);
-        // Cause ik solver is overriding any changes to rotation need to be applied in late update
     }
 
 }

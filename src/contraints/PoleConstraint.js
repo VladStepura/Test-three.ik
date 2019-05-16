@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import {Quaternion} from "three";
-import {Vector3} from "three";
 
+// PoleConstraint is class which is closely interviened with three-ik.js IkChain
+// it initializes lambda for IkChain which is executes in backward calculations method
 class PoleConstraint
 {
     constructor(poleChain, poleTarget)
@@ -10,13 +10,9 @@ class PoleConstraint
         this.poleTarget = poleTarget;
         this.poleAngle = 0;
         this.addPoleTargetToScene();
-        this.firstRun = true;
-        this.applyPoleConstraint = false;
-        this.neutralStatePosition = poleChain.target.position.clone();
-        this.neutralOffset = .6;
-        this.startingPositionZ = 1;
+        this.applyPoleConstraint = true;
+        // Lambda which is execute itself in pole chain backward method
         this.poleChain.chainConstraint = (joint) => this.rotateToward(joint);
-        this.rotationPlane = new THREE.Plane();
     }
 
     addPoleTargetToScene()

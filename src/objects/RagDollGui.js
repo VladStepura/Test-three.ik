@@ -1,5 +1,6 @@
 import Gui from "./Gui";
-
+// RagDollGUi is class which is defines all gui elements for Ragdoll
+// It's purpose to separate Gui logic from Ragdoll logic
 class RagDollGui
 {
     constructor(ragDoll)

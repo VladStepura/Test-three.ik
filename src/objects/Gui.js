@@ -15,7 +15,6 @@ class Gui
     addVectorSlider(vector, name, min, max)
     {
         let folder = this.datGui.addFolder(name);
-        this.folder = folder;
         folder.add(vector, 'x', min, max)
         folder.add(vector, 'y', min, max)
         folder.add(vector, 'z', min, max)
@@ -23,6 +22,7 @@ class Gui
         folder.__controllers[0].name('x');
         folder.__controllers[1].name('y');
         folder.__controllers[2].name('z');
+        this.folder = folder;
     }
 }
 export default Gui;
