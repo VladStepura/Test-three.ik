@@ -19,10 +19,10 @@ class RagDoll extends IkObject
         super.initObject(scene, controlTarget);
         // Adds gui elements to control objects
         let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, .35));
-        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, .8, 1.6));
+        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, 1.2, 2));
 
         let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, .35));
-        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, .8, 1.6));
+        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, 1.2, 2));
 
         let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 1));
 
@@ -34,14 +34,10 @@ class RagDoll extends IkObject
 
         this.poleConstraints[0].poleAngle = 128;
 
-        this.poleConstraints[1].poleAngle = -40;
-        this.poleConstraints[1].needStraightening  = true;
-        this.poleConstraints[2].poleAngle = -40;
-
-        this.poleConstraints[3].poleAngle = 180;
-        //this.poleConstraints[3].needStraightening = true;
-        this.poleConstraints[4].poleAngle = -126;
-       // this.poleConstraints[4].needStraightening = true;
+        this.poleConstraints[1].applyPoleConstraint = true;
+        this.poleConstraints[2].applyPoleConstraint = true;
+        this.poleConstraints[3].applyPoleConstraint = true;
+        this.poleConstraints[4].applyPoleConstraint = true;
         this.addHipsEvent();
     }
 
@@ -50,25 +46,12 @@ class RagDoll extends IkObject
         super.update();
         if(this.enableIk)
         {
-            // Pole target needs to be applied before ik
-            // in order to changer figure parameters
-
-            this.setPoleTargets();
             // Solves the inverse kinematic of object
             this.ik.solve();
         }
         this.lateUpdate();
     }
 
-    // Applies pole target to models
-    setPoleTargets()
-    {
-        // Applies blender's pole constraint to left arm
-        this.poleConstraints.forEach((poleConstraint) =>
-        {
-            poleConstraint.apply();
-        });
-    }
 
     lateUpdate()
     {
