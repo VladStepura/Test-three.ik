@@ -132,6 +132,7 @@ class PoleConstraint
             let endGlobalPose = new THREE.Vector3();
             endBone.getWorldPosition(endGlobalPose);
 
+/*
             let Z_AXIS$1 = new THREE.Vector3(0, 0, -1);
             let t1$1 = new THREE.Vector3();
             let t2$1 = new THREE.Vector3();
@@ -140,7 +141,7 @@ class PoleConstraint
 
             let axis = new THREE.Vector3().subVectors(rootGlobalPose, endGlobalPose).negate();
             let angleRoot = this.currentPoleAngle();
-            let direction = new THREE.Vector3().copy(joint._getDirection());
+
 
             let parentDirection = joint._localToWorldDirection(t1$1.copy(Z_AXIS$1)).normalize();
             let rotationPlaneNormal = joint._localToWorldDirection(t2$1.copy(joint._originalHinge)).normalize();
@@ -153,102 +154,39 @@ class PoleConstraint
             {
                 direction.applyAxisAngle(axis, angleRoot);
             }
+*/
 
+            let direction = new THREE.Vector3().copy(joint._getDirection());
 
-            
+            let p1 = endGlobalPose;
+            let p2 = rootGlobalPose;
+            let target = this.poleTarget.mesh.position;
 
+            let axis = new THREE.Vector3().subVectors(p1, p2);
+            let projectedPole = this.projectPointOnLine(p1, p2, target);
+            let xAxis = new THREE.Vector3().subVectors(target, projectedPole).normalize();
+            let yAxis = new THREE.Vector3().subVectors(p1, projectedPole).normalize();
+            let zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
 
+            let TBN = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
 
+            let boneDirectionProjected = new THREE.Vector3().copy(direction).applyMatrix4(TBN);
+            let radius = direction.lengthSq();
 
+            let boneDirectionXZ = new THREE.Vector2(boneDirectionProjected.x, boneDirectionProjected.z);
+
+            let angleToPlane = boneDirectionXZ.angle();
+            console.log(this.radToDeg(angleToPlane));
+            boneDirectionXZ.rotateAround(new THREE.Vector2(axis.x, axis.z), angleToPlane);
+            boneDirectionProjected.x = boneDirectionXZ.x;
+            boneDirectionProjected.z = boneDirectionXZ.y;
+
+            let inversedTBN = new THREE.Matrix4().getInverse(TBN);
+            boneDirectionProjected = boneDirectionProjected.applyMatrix4(inversedTBN);
+            boneDirectionProjected.setLength(radius);
+
+            direction.copy(boneDirectionProjected);
             joint._setDirection(direction);
-
-
-
-
-/*            let direction = new THREE.Vector3().copy(joint._getDirection());
-            let parentDirection = joint._localToWorldDirection(t1$1.copy(X_AXIS)).normalize();
-            let rotationPlaneNormal = joint._localToWorldDirection(t2$1.copy(joint._originalHinge)).normalize();
-            this.rotationPlane.normal = rotationPlaneNormal;
-
-            let projectedDir = this.rotationPlane.projectPoint(direction, new THREE.Vector3());
-            let offset = new THREE.Vector3();
-            if(this.previousDirection === null)
-            {
-                this.previousDirection = projectedDir.clone();
-            }
-            else
-            {
-                offset.subVectors(projectedDir, this.previousDirection);
-            }
-            let worldDirection = joint._getWorldDirection(this.poleChain.joints[1]);
-
-
-            let currentAngle = this.radToDeg(direction.angleTo(parentDirection));
-            /!*         console.log(currentAngle);
-                     if (this.poleAngle < currentAngle)
-                     {
-                         direction.normalize();
-                         let correctionAxis = new THREE.Vector3().crossVectors(parentDirection, direction).normalize();
-                         parentDirection.applyAxisAngle(correctionAxis, this.poleAngle * THREE.Math.DEG2RAD);
-                         joint._setDirection(parentDirection);
-                         return true;
-                     }*!/
-
-            let poleRad = this.degToRad(this.poleAngle);
-
-            let diff = this.currentRotation - poleRad;
-            this.rotationMatrix.makeRotationAxis(Y_AXIS, poleRad);
-            let rotation = new THREE.Quaternion().setFromRotationMatrix(this.rotationMatrix);
-            let euler = new THREE.Euler().setFromRotationMatrix(this.rotationMatrix);
-
-            joint.bone.setRotationFromMatrix(this.rotationMatrix);
-            let positionMatrix = joint.bone.matrix.clone();
-            let currentRotation = new THREE.Quaternion().setFromRotationMatrix(positionMatrix);
-            let eulerRotation = new THREE.Euler().setFromRotationMatrix(positionMatrix);
-            let position = new THREE.Vector3().setFromMatrixPosition(positionMatrix);
-
-            // let correctionAxis = new THREE.Vector3().crossVectors(parentDirection, direction).normalize();
-            let rotationDifference = new Quaternion()
-            let cloneDirection = projectedDir.clone();
-           // projectedDir.sub(cloneDirection); // remove the offset
-            if(!currentRotation.equals(rotation))
-            {
-               // projectedDir.applyQuaternion(rotation); // rotate the POSITION
-            }
-            //projectedDir.add(cloneDirection); // re-add the offset
-           // projectedDir.applyAxisAngle(correctionAxis, poleRad);
-            //matrix.makeRotationAxis(rotationAxis, poleRad);
-            //projectedDir.sub(position);
-            //projectedDir.applyAxisAngle(rotationAxis, poleRad);
-            //projectedDir.add(position);
-            //projectedDir.applyMatrix4(matrix);
-            //  console.log(projectedDir);
-            // joint._setDirection(projectedDir);
-            // projectedDir.copy(this.previousDirection);
-            //  projectedDir.add(offset);
-
-            //#region Look at Pole target
-            let jointLength = projectedDir
-            let roundedPole = this.poleTarget.mesh.position.clone();
-            let rootBoneWorldPosition = new THREE.Vector3();
-            joint.bone.getWorldPosition(rootBoneWorldPosition);
-            let secondBoneWorldPosition = new THREE.Vector3();
-            this.poleChain.joints[1].bone.getWorldPosition(secondBoneWorldPosition);
-            let angle = this.radToDeg(rootBoneWorldPosition.angleTo(roundedPole));
-            let radius = joint._getWorldDistance(this.poleChain.joints[1]);
-            let pseudoDir = new THREE.Vector3();
-            pseudoDir.x = rootBoneWorldPosition.x + Math.cos(angle)*radius;
-            pseudoDir.y = rootBoneWorldPosition.y + Math.sin(angle)*radius;
-            pseudoDir.z = rootBoneWorldPosition.z + Math.sin(angle)*radius;
-
-            let boneDirection = new THREE.Vector3();
-            joint.bone.getWorldDirection(boneDirection);
-
-            //#endregion
-
-            joint._setDirection(projectedDir);
-
-            this.currentRotation = this.degToRad(this.poleAngle)*/
         }
     }
 
