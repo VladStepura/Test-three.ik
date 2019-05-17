@@ -44,6 +44,8 @@ class RagDoll extends IkObject
             this.addPoleConstraintToRootJoint(rightLegChain, rightLegPoleTarget);
 
             this.poleConstraints[0].poleAngle = 128;
+            this.poleConstraints[0].chainLength = 6;
+            this.poleConstraints[1].testing = true;
 
             this.addHipsEvent();
     }
@@ -131,24 +133,21 @@ class RagDoll extends IkObject
         let hipsControl = this.hipsControlTarget.control;
         let hipsTarget = this.hipsControlTarget.target;
 
+        let backConstraint = this.poleConstraints[0].poleTarget.mesh.position;
+        let leftArmConstraint = this.poleConstraints[1].poleTarget.mesh.position;
+        let rightArmConstraint = this.poleConstraints[2].poleTarget.mesh.position;
+        let leftLegConstraint = this.poleConstraints[3].poleTarget.mesh.position;
+        let rightLegConstraint = this.poleConstraints[4].poleTarget.mesh.position;
+
         hipsControl.addEventListener("mouseDown", (event) =>
         {
             this.hipsMouseDown = true;
 
-            let backConstraint = this.poleConstraints[0].poleTarget.mesh.position.clone();
-            this.poleTargetOffsets.back = backConstraint.sub(hipsTarget.position);
-
-            let leftArmConstraint = this.poleConstraints[1].poleTarget.mesh.position.clone();
-            this.poleTargetOffsets.leftArm = leftArmConstraint.sub(hipsTarget.position);
-
-            let rightArmConstraint = this.poleConstraints[2].poleTarget.mesh.position.clone();
-            this.poleTargetOffsets.rightArm = rightArmConstraint.sub(hipsTarget.position);
-
-            let leftLegConstraint = this.poleConstraints[3].poleTarget.mesh.position.clone();
-            this.poleTargetOffsets.leftLeg = leftLegConstraint.sub(hipsTarget.position);
-
-            let rightLegConstraint = this.poleConstraints[4].poleTarget.mesh.position.clone();
-            this.poleTargetOffsets.rightLeg = rightLegConstraint.sub(hipsTarget.position);
+            this.poleTargetOffsets.back = backConstraint.clone().sub(hipsTarget.position);
+            this.poleTargetOffsets.leftArm = leftArmConstraint.clone().sub(hipsTarget.position);
+            this.poleTargetOffsets.rightArm = rightArmConstraint.clone().sub(hipsTarget.position);
+            this.poleTargetOffsets.leftLeg = leftLegConstraint.clone().sub(hipsTarget.position);
+            this.poleTargetOffsets.rightLeg = rightLegConstraint.clone().sub(hipsTarget.position);
 
         });
         hipsControl.addEventListener("change", (event) =>
@@ -157,23 +156,23 @@ class RagDoll extends IkObject
             {
                 let hipsPosition = hipsTarget.position.clone();
                 hipsPosition.add(this.poleTargetOffsets.back);
-                this.poleConstraints[0].poleTarget.mesh.position.copy(hipsPosition);
+                backConstraint.copy(hipsPosition);
 
                 hipsPosition = hipsTarget.position.clone();
                 hipsPosition.add(this.poleTargetOffsets.leftArm);
-                this.poleConstraints[1].poleTarget.mesh.position.copy(hipsPosition);
+                leftArmConstraint.copy(hipsPosition);
 
                 hipsPosition = hipsTarget.position.clone();
                 hipsPosition.add(this.poleTargetOffsets.rightArm);
-                this.poleConstraints[2].poleTarget.mesh.position.copy(hipsPosition);
+                rightArmConstraint.copy(hipsPosition);
 
                 hipsPosition = hipsTarget.position.clone();
                 hipsPosition.add(this.poleTargetOffsets.leftLeg);
-                this.poleConstraints[3].poleTarget.mesh.position.copy(hipsPosition);
+                leftLegConstraint.copy(hipsPosition);
 
                 hipsPosition = hipsTarget.position.clone();
                 hipsPosition.add(this.poleTargetOffsets.rightLeg);
-                this.poleConstraints[4].poleTarget.mesh.position.copy(hipsPosition);
+                rightLegConstraint.copy(hipsPosition);
             }
         });
         hipsControl.addEventListener("dragging-changed", (event) =>

@@ -1,6 +1,8 @@
+import * as THREE from "three";
+
 class IkConstraint
 {
-    constructor(poleChain, ikTarget)
+    constructor(poleChain)
     {
         if(new.target === IkConstraint)
         {
@@ -11,7 +13,6 @@ class IkConstraint
             throw new TypeError("Must override method applyConstraint(joint)");
         }
         this.poleChain = poleChain;
-        this.ikTarget = ikTarget;
         this.influence = 100;
         this.name = "DefaultConstraint";
     }
@@ -23,7 +24,29 @@ class IkConstraint
 
     get influence()
     {
-        return this.influence;
+        return this._influence;
     }
+
+    blendBetweenVectorsByInfluence(v1, v2)
+    {
+        let difference = v2.clone().sub(v1);
+        let influence =  this.influence / 100;
+        let result = difference.multiplyScalar(influence);
+        return result;
+    }
+
+    applyInfluenceToJoint(joint)
+    {
+        let direction = new THREE.Vector3().copy(joint._getDirection());
+        let radius = direction.length();
+        let originalDirection = joint._originalDirection.clone().negate();
+
+        let blend = this.blendBetweenVectorsByInfluence(originalDirection, direction);
+        originalDirection.add(blend);
+        direction.copy(originalDirection);
+        direction.setLength(radius);
+        joint._setDirection(direction);
+    }
+
 }
 export default IkConstraint;
