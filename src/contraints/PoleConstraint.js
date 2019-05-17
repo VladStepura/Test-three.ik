@@ -1,39 +1,35 @@
 import * as THREE from "three";
+import IkConstraint from "./IkConstraint";
 
 // PoleConstraint is class which is closely interviened with three-ik.js IkChain
 // it initializes lambda for IkChain which is executes in backward calculations method
-class PoleConstraint
+class PoleConstraint extends IkConstraint
 {
-    constructor(poleChain, poleTarget)
+    constructor(poleChain, poleTarget, ikTarget)
     {
-        this.poleChain = poleChain;
+        super(poleChain, ikTarget);
         this.poleTarget = poleTarget;
         this.poleAngle = 0;
-        this.addPoleTargetToScene();
         this.applyPoleConstraint = true;
-        // Lambda which is execute itself in pole chain backward method
-        this.poleChain.chainConstraint = (joint) => this.rotateToward(joint);
-    }
-
-    addPoleTargetToScene()
-    {
-        let scene = this.poleChain.joints[0].bone;
-        while(!(scene instanceof THREE.Scene))
-        {
-            scene = scene.parent;
-        }
-        scene.add(this.poleTarget.mesh);
+        this.chainLength = 3;
+        let indexOfIkTarget = poleChain.joints.indexOf(ikTarget);
+        let endIndex = indexOfIkTarget + this.chainLength;
+        let lastElement = poleChain.joints.length - 1;
+        endIndex  = endIndex > lastElement ? lastElement : endIndex;
+        this.endIndex = endIndex;
     }
 
     // Applies constraint to chain's joint
     // This method is lambda that fires in three-ik.js backward calculations
-    rotateToward(joint)
+    applyConstraint(joint)
     {
-        if (this.applyPoleConstraint && (this.poleChain.joints[0] === joint) )
+        if (this.applyPoleConstraint /*&& (this.poleChain.joints[this.rootIndex] === joint) */)
         {
             let joints = this.poleChain.joints;
-            let rootBone = joints[0].bone;
-            let endBone = joints[joints.length - 1].bone;
+            let ikTarget = this.ikTarget;
+            let endJoint = joints[this.endIndex];
+            let rootBone = ikTarget.bone;
+            let endBone = endJoint.bone;
             let rootGlobalPose = new THREE.Vector3();
             let endGlobalPose = new THREE.Vector3();
             rootBone.getWorldPosition(rootGlobalPose);

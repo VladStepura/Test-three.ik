@@ -15,26 +15,46 @@ class RagDoll extends IkObject
 
     initObject(scene, ...controlTarget)
     {
-        super.initObject(scene, controlTarget);
-        // Adds gui elements to control objects
-        let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, -.35));
-        let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, 1.2, 1));
+            super.initObject(scene, controlTarget);
+            // Adds gui elements to control objects
+            let leftArmPoleTarget = new PoleTarget(new THREE.Vector3(.35, 1.6, -.35));
+            let leftLegPoleTarget = new PoleTarget(new THREE.Vector3(.09, 1.2, 1));
 
-        let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, -.35));
-        let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, 1.2, 1));
+            let rightArmPoleTarget = new PoleTarget(new THREE.Vector3(-.35, 1.6, -.35));
+            let rightLegPoleTarget = new PoleTarget(new THREE.Vector3(-.09, 1.2, 1));
 
-        let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 0));
+            let backPoleTarget = new PoleTarget(new THREE.Vector3(0, 1.6, 0));
 
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[0], backPoleTarget));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[1], leftArmPoleTarget));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[2], rightArmPoleTarget));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[3], leftLegPoleTarget));
-        this.poleConstraints.push(new PoleConstraint(this.ik.chains[4], rightLegPoleTarget));
+            scene.add(leftArmPoleTarget.mesh);
+            scene.add(leftLegPoleTarget.mesh);
+            scene.add(rightArmPoleTarget.mesh);
+            scene.add(rightLegPoleTarget.mesh);
+            scene.add(backPoleTarget.mesh);
 
-        this.poleConstraints[0].poleAngle = 128;
+            let backChain = this.ik.chains[0];
+            let leftArmChain = this.ik.chains[1];
+            let rightArmChain = this.ik.chains[2];
+            let leftLegChain = this.ik.chains[3];
+            let rightLegChain = this.ik.chains[4];
 
-        this.addHipsEvent();
+            this.addPoleConstraintToRootJoint(backChain, backPoleTarget);
+            this.addPoleConstraintToRootJoint(leftArmChain, leftArmPoleTarget);
+            this.addPoleConstraintToRootJoint(rightArmChain, rightArmPoleTarget);
+            this.addPoleConstraintToRootJoint(leftLegChain, leftLegPoleTarget);
+            this.addPoleConstraintToRootJoint(rightLegChain, rightLegPoleTarget);
+
+            this.poleConstraints[0].poleAngle = 128;
+
+            this.addHipsEvent();
     }
+
+    addPoleConstraintToRootJoint(chain, poleTarget)
+    {
+        let poleConstraint = new PoleConstraint(chain, poleTarget);
+        chain.joints[0].addIkConstraint(poleConstraint);
+        this.poleConstraints.push(poleConstraint);
+    }
+
     // Applies events to back control
     applyEventsToBackControl(backControl)
     {
@@ -58,6 +78,7 @@ class RagDoll extends IkObject
             this.applyingOffset = false;
         });
     }
+
     update()
     {
         super.update();

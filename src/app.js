@@ -5,6 +5,8 @@ import TargetControl from "./objects/TargetControl";
 import RagDoll from "./objects/IkObjects/RagDoll";
 import Stats from "stats-js/src/Stats";
 import RagDollGui from "./objects/RagDollGui";
+import IkConstraint from "./contraints/IkConstraint";
+
 
 // App is main class which initialises all object and goes through rendering cycle
 class App
@@ -18,6 +20,7 @@ class App
     // Initialize main app
     initialize()
     {
+
         document.body.appendChild( this.stats.dom );
 
         //#region Three js Initialization

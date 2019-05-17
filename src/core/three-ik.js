@@ -78,10 +78,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
 
-
-
-
-
 var asyncGenerator = function () {
   function AwaitValue(value) {
     this.value = value;
@@ -195,10 +191,6 @@ var asyncGenerator = function () {
   };
 }();
 
-
-
-
-
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
@@ -222,12 +214,6 @@ var createClass = function () {
     return Constructor;
   };
 }();
-
-
-
-
-
-
 
 var get = function get(object, property, receiver) {
   if (object === null) object = Function.prototype;
@@ -271,15 +257,6 @@ var inherits = function (subClass, superClass) {
 };
 
 
-
-
-
-
-
-
-
-
-
 var possibleConstructorReturn = function (self, call) {
   if (!self) {
     throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -287,10 +264,6 @@ var possibleConstructorReturn = function (self, call) {
 
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
-
-
-
-
 
 var slicedToArray = function () {
   function sliceIterator(arr, i) {
@@ -364,6 +337,7 @@ var IKJoint = function () {
         constraints = _ref.constraints;
     classCallCheck(this, IKJoint);
     this.constraints = constraints || [];
+    this.ikConstraints = [];
     this.bone = bone;
     this.distance = 0;
     this._originalDirection = new three.Vector3();
@@ -382,6 +356,15 @@ var IKJoint = function () {
     value: function _setIsSubBase() {
       this._isSubBase = true;
       this._subBasePositions = [];
+    }
+  },{
+    key: 'addIkConstraint',
+    value: function addIkConstraint(ikConstraint) {
+      if (ikConstraint === undefined) {
+        return;
+      }
+      this.ikConstraints.push(ikConstraint);
+      ikConstraint.ikTarget = this;
     }
   }, {
     key: '_applySubBasePositions',
@@ -407,6 +390,16 @@ var IKJoint = function () {
           var constraint = _step.value;
           if (constraint && constraint._apply) {
             var applied = constraint._apply(this);
+            constraintApplied = constraintApplied || applied;
+          }
+        }
+
+        for (var _iterator = this.ikConstraints[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true)
+        {
+          var constraint = _step.value;
+          if (constraint && constraint.applyConstraint)
+          {
+            var applied = constraint.applyConstraint(this);
             constraintApplied = constraintApplied || applied;
           }
         }
@@ -683,6 +676,7 @@ var IKChain = function () {
       for (var i = 0; i < this.joints.length - 1; i++)
       {
         var joint = this.joints[i];
+
         var nextJoint = this.joints[i + 1];
         var jointWorldPosition = joint._getWorldPosition();
         var direction = nextJoint._getWorldDirection(joint);
@@ -690,7 +684,7 @@ var IKChain = function () {
         joint._applyConstraints();
         if(this.chainConstraint !== null)
         {
-          this.chainConstraint(joint);
+          this.chainConstraint(this.joints[i]);
         }
         direction.copy(joint._direction);
         if (!(this.base === joint && joint._isSubBase)) {
