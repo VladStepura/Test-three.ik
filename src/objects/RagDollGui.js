@@ -32,7 +32,7 @@ class RagDollGui
             this.changePoleContraintVisbility(this.poleConstraintsVisible);
         });
         gui.datGui.add(ragDoll.poleConstraints[1], "influence", 0, 100).name("Left arm influence");
-        gui.datGui.add(ragDoll.poleConstraints[2], "influence", 0, 100).name("Right armI nfluence");
+        gui.datGui.add(ragDoll.poleConstraints[2], "influence", 0, 100).name("Right armI influence");
         gui.datGui.add(ragDoll.poleConstraints[3], "influence", 0, 100).name("Left leg Influence");
         gui.datGui.add(ragDoll.poleConstraints[4], "influence", 0, 100).name("Right leg Influence");
 

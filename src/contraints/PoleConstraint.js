@@ -29,7 +29,6 @@ class PoleConstraint extends IkConstraint
 
         let rootBone = ikTarget.bone;
         let endBone = endJoint.bone;
-        console.log(endBone.name);
         let rootGlobalPose = new THREE.Vector3();
         let endGlobalPose = new THREE.Vector3();
         rootBone.getWorldPosition(rootGlobalPose);
