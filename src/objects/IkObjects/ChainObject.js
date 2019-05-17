@@ -1,4 +1,4 @@
-import {IKChain, IKHingeConstraint} from "../core/three-ik";
+import {IKChain, IKHingeConstraint} from "../../core/three-ik";
 
 // ChainObject is class which contains all info about chain
 // From which element chain is starting and ending

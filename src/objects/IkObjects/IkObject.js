@@ -1,6 +1,6 @@
-import {IK, IKJoint} from "../core/three-ik";
+import {IK, IKJoint} from "../../core/three-ik";
 import * as THREE from "three";
-import setZForward from "../utils/axisUtils";
+import setZForward from "../../utils/axisUtils";
 import ChainObject from "./ChainObject";
 
 // IKObject is class which applies ik onto skeleton
@@ -112,29 +112,7 @@ class IkObject
         this.neckInfluence();
     }
 
-    // Applies events to back control
-    applyEventsToBackControl(backControl)
-    {
-        backControl.addEventListener("mouseDown", (event) =>
-        {
-            this.applyingOffset = true;
-        });
-        backControl.addEventListener("change", (event) =>
-        {
-            if(this.enableIk)
-            {
-                this.neckInfluence();
-            }
-        });
-        backControl.addEventListener("dragging-changed", (event) =>
-        {
-            this.calculteBackOffset();
-        });
-        backControl.addEventListener("mouseUp", (event) =>
-        {
-            this.applyingOffset = false;
-        });
-    }
+
 
     neckInfluence()
     {

@@ -1,7 +1,7 @@
 import IkObject from "./IkObject";
 import * as THREE from "three";
-import PoleConstraint from "../contraints/PoleConstraint";
-import PoleTarget from "./PoleTarget";
+import PoleConstraint from "../../contraints/PoleConstraint";
+import PoleTarget from "../PoleTarget";
 
 class RagDoll extends IkObject
 {
@@ -35,7 +35,29 @@ class RagDoll extends IkObject
 
         this.addHipsEvent();
     }
-
+    // Applies events to back control
+    applyEventsToBackControl(backControl)
+    {
+        backControl.addEventListener("mouseDown", (event) =>
+        {
+            this.applyingOffset = true;
+        });
+        backControl.addEventListener("change", (event) =>
+        {
+            if(this.enableIk)
+            {
+                this.neckInfluence();
+            }
+        });
+        backControl.addEventListener("dragging-changed", (event) =>
+        {
+            this.calculteBackOffset();
+        });
+        backControl.addEventListener("mouseUp", (event) =>
+        {
+            this.applyingOffset = false;
+        });
+    }
     update()
     {
         super.update();
@@ -55,6 +77,7 @@ class RagDoll extends IkObject
     }
 
     // Follows moving target rotation which applied to feet
+    // Default position is facing flat to Earth
     legsFollowTargetRotation()
     {
         // Makes right foot follow the rotation of target
@@ -62,7 +85,7 @@ class RagDoll extends IkObject
         let rightLegChainTarget = this.chainObjects[4].controlTarget.target;
         rightFootBone.rotation.copy(rightLegChainTarget.rotation);
         this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(0.5, 0,0  ));
-        // Makes right foot follow the rotation of target
+        // Makes left foot follow the rotation of target
         let leftFootBone = this.ik.chains[3].joints[2].bone;
         let leftLegChainTarget = this.chainObjects[3].controlTarget.target;
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
@@ -70,6 +93,8 @@ class RagDoll extends IkObject
     }
 
     // Sets and quaternion angle for bones
+    // Give the result of bone always faces direction set by euler
+    // Effect like flat foot to earth can be achieved
     rotateBoneQuaternion(bone, euler)
     {
         let quaternion = new THREE.Quaternion();
@@ -148,8 +173,7 @@ class RagDoll extends IkObject
         {
             let neck = this.chainObjects[0].chain.joints[3].bone;
             neck.rotation.copy(this.neckRotation);
-            let neckQuanternion = new THREE.Quaternion();
-            neck.getWorldQuaternion(neckQuanternion);
+            neck.updateMatrixWorld(true, false);
 
             let head = this.chainObjects[0].chain.joints[4].bone;
             this.rotateBoneQuaternion(head, new THREE.Euler(-1, 0, 0));

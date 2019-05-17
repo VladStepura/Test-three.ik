@@ -33,13 +33,16 @@ class PoleConstraint
         {
             let joints = this.poleChain.joints;
             let rootBone = joints[0].bone;
+            let endBone = joints[joints.length - 1].bone;
             let rootGlobalPose = new THREE.Vector3();
+            let endGlobalPose = new THREE.Vector3();
             rootBone.getWorldPosition(rootGlobalPose);
+            endBone.getWorldPosition(endGlobalPose);
 
             let direction = new THREE.Vector3().copy(joint._getDirection());
 
             // Taking Ik target position
-            let ikTargetPose = this.poleChain.target.position.clone();
+            let ikTargetPose = endGlobalPose;
             let rootPose = rootGlobalPose;
             let target = this.poleTarget.mesh.position.clone();
 
@@ -67,7 +70,7 @@ class PoleConstraint
 
             // Calculate current direction angle to positive xAxis and adding PoleAngle
             // We making angle negative in order to move our object to xAxis zero
-            let angleToPlane = -boneDirectionXZ.angle() + this.degToRad(this.poleAngle);
+            let angleToPlane = -boneDirectionXZ.angle() + THREE.Math.DEG2RAD * this.poleAngle;
             // Rotate direction around origin by angle
             boneDirectionXZ.rotateAround(new THREE.Vector2(0, 0), angleToPlane);
             // Sets original x to changed direction x
@@ -84,17 +87,6 @@ class PoleConstraint
             // Sets bone direction
             joint._setDirection(direction);
         }
-    }
-
-
-    degToRad(degree)
-    {
-        return degree * Math.PI/180;
-    }
-
-    radToDeg(rad)
-    {
-        return rad * 180/Math.PI;
     }
 
     // Projects point from target onto line between p1 and p2

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {OrbitControls} from "./utils/OrbitControls";
 import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import TargetControl from "./objects/TargetControl";
-import RagDoll from "./objects/RagDoll";
+import RagDoll from "./objects/IkObjects/RagDoll";
 import Stats from "stats-js/src/Stats";
 import RagDollGui from "./objects/RagDollGui";
 
