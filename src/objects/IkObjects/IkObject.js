@@ -34,8 +34,7 @@ class IkObject
         chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", this.controlTargets[3]));
         chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", this.controlTargets[4]));
 
-        // Adds events to Back control
-        this.applyEventsToBackControl(controlTarget[0][0].control);
+
 
         // Goes through all scene objects
         scene.traverse((object) =>
@@ -109,16 +108,6 @@ class IkObject
         // Adds skeleton helper to scene
         scene.add( skeletonHelper );
         this.calculteBackOffset();
-        this.neckInfluence();
-    }
-
-
-
-    neckInfluence()
-    {
-        let spineRotation = this.chainObjects[0].chain.joints[0].bone.rotation.clone();
-        this.neckRotation = this.chainObjects[0].chain.joints[3].bone.rotation.clone();
-        this.neckRotation.y = -spineRotation.y * 0.5;
     }
 
     // Calculates back's offset in order to move with hips
