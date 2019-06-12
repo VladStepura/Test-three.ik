@@ -61,6 +61,7 @@ function setQuaternionFromDirection(direction, up, target) {
   el[0] = x.x;el[4] = y.x;el[8] = z.x;
   el[1] = x.y;el[5] = y.y;el[9] = z.y;
   el[2] = x.z;el[6] = y.z;el[10] = z.z;
+
   target.setFromRotationMatrix(m);
 }
 function transformPoint(vector, matrix, target) {
@@ -491,9 +492,10 @@ var IKJoint = function () {
       if (parent) {
         this._updateMatrixWorld();
         var inverseParent = new three.Matrix4().getInverse(this.bone.parent.matrixWorld);
-        transformPoint(position, inverseParent, position);
+        position.applyMatrix4(inverseParent);
         this.bone.position.copy(position);
         this._updateMatrixWorld();
+
         this._worldToLocalDirection(direction);
         setQuaternionFromDirection(direction, Y_AXIS, this.bone.quaternion);
         this.bone.rotation.z = 0
@@ -577,7 +579,48 @@ var IKChain = function () {
       }
       return this;
     }
-  }, {
+  },  {
+    key: "reinitializeJoints",
+    value: function reinitializeJoints()
+    {
+      this.joints = this.joints || [];
+
+      for (let i = 0; i < this.joints.length; i++)
+      {
+        let joint = this.joints[i];
+        if (joint === this.joints[0])
+        {
+          this.origin = new three.Vector3().copy(this.base._getWorldPosition());
+          console.log(joint);
+        }
+        else
+        {
+          var previousJoint = this.joints[i - 1];
+          var previousPreviousJoint = this.joints[i - 2];
+          previousJoint._updateMatrixWorld();
+          previousJoint._updateWorldPosition();
+          joint._updateWorldPosition();
+          var distance = previousJoint._getWorldDistance(joint);
+          if (distance === 0)
+          {
+            throw new Error('bone with 0 distance between adjacent bone found');
+          }
+          joint._setDistance(distance);
+          joint._updateWorldPosition();
+          var direction = previousJoint._getWorldDirection(joint);
+          previousJoint._originalDirection = new three.Vector3().copy(direction);
+          joint._originalDirection = new three.Vector3().copy(direction);
+          if (previousPreviousJoint)
+          {
+            previousJoint._originalHinge = previousJoint._worldToLocalDirection(previousJoint._originalDirection.clone().cross(previousPreviousJoint._originalDirection).normalize());
+          }
+          this.totalLengths += distance;
+        }
+
+      }
+      return this;
+    },
+  },{
     key: '_hasEffector',
     value: function _hasEffector() {
       return !!this.effector;

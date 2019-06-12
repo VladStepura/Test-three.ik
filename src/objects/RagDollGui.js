@@ -26,7 +26,10 @@ class RagDollGui
                 this.recalculate();
             }
         });
-
+        gui.addVectorSlider(ragDoll.hips.parent.rotation, "Position target rotation",
+            -Math.PI * 1, Math.PI * 1);
+        gui.addVectorSlider(ragDoll.hips.parent.parent.children[1].rotation, "Mesh target rotation",
+            -Math.PI * 1, Math.PI * 1);
         gui.datGui.add(this, "poleConstraintsVisible").onChange(()=>
         {
             this.changePoleContraintVisbility(this.poleConstraintsVisible);

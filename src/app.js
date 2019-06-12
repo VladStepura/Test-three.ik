@@ -5,7 +5,6 @@ import TargetControl from "./objects/TargetControl";
 import RagDoll from "./objects/IkObjects/RagDoll";
 import Stats from "stats-js/src/Stats";
 import RagDollGui from "./objects/RagDollGui";
-import IkConstraint from "./contraints/IkConstraint";
 
 
 // App is main class which initialises all object and goes through rendering cycle
@@ -73,8 +72,16 @@ class App
             this.iKObjects.push(loadedObject);
             let ragDollGui = new RagDollGui(loadedObject);
             ragDollGui.initGui();
+            console.log(gltf.scene);
+            //let scale = 20;
+            //gltf.scene.children[0].children[0].rotation.set(0, 0, 0);
+            //gltf.scene.children[0].children[1].rotation.set(0, 0, 0);
+            //gltf.scene.children[0].updateMatrixWorld()
+            //gltf.scene.children[0].rotateZ(180);
+            loadedObject.reinitialize();
         }
-        gltfLoader.loadToScene('./assets/male-adult-testforik.glb', scene);
+        gltfLoader.loadToScene('./assets/adult-male.glb', scene);
+        //gltfLoader.loadToScene('./assets/male-adult-testforik.glb', scene);
         //#endregion
     }
 

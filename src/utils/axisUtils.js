@@ -8,6 +8,7 @@
  **/
 
 import * as THREE from "three";
+import {Quaternion} from "three";
 
 const t = new THREE.Vector3();
 const q = new THREE.Quaternion();
@@ -24,8 +25,79 @@ var RESETQUAT = new THREE.Quaternion();
  *
  * @param {THREE.BONE} rootBone
  */
+// Return angle and axis of current quaternion
+// Angle in radians
+THREE.Quaternion.prototype.toAngleAxis = function toAngleAxis()
+{
+    let quaternion = this;
+    let angle = 2 * Math.acos(quaternion.w);
+    let x = quaternion.x / Math.sqrt(1 - quaternion.w * quaternion.w);
+    let y = quaternion.y / Math.sqrt(1 - quaternion.w * quaternion.w);
+    let z = quaternion.z / Math.sqrt(1 - quaternion.w * quaternion.w);
+    x = isFinite(x) ? x : 0;
+    y = isFinite(y) ? y : 0;
+    z = isFinite(z) ? z : 0;
+    let axis = new THREE.Vector3(x, y, z);
+    return {angle: angle, axis: axis};
+}
+THREE.Vector3.prototype.reverseZ = function reverseZ()
+{
+    let vector = this;
+    return new THREE.Vector3(vector.x, vector.y, -vector.z);
+}
+THREE.Quaternion.prototype.reverseZ = function reverseZ()
+{
+    let result = this.toAngleAxis();
+    let axis = result.axis.reverseZ();
+    return new THREE.Quaternion().setFromAxisAngle(axis, -result.angle);
+}
+THREE.Matrix4.prototype.reverseZ = function reverseZ()
+{
+    let matrix = this;
+    let position = new THREE.Vector3();
+    let rotation = new THREE.Quaternion();
+    let scale = new THREE.Vector3();
+    matrix.decompose(position, rotation, scale);
+    matrix.compose(position.reverseZ(), rotation, scale);
+    return matrix;
+}
 
-export default function setZForward(rootBone) {
+function setReverseZ(rootBone)
+{
+    var worldPos = {};
+    getOriginalWorldPositions(rootBone, worldPos);
+    reverseTransform(rootBone, worldPos);
+    //let mesh = rootBone.children[1];
+    //for(let bone of mesh.skeleton.bones)
+    //{
+    //    bone.matrix = bone.matrix.reverseZ();
+    //}
+}
+
+function reverseTransform(parentBone, worldPos)
+{
+    let quaternion = parentBone.quaternion;
+    quaternion = quaternion.reverseZ();
+    parentBone.quaternion.copy(RESETQUAT);
+    parentBone.updateMatrixWorld();
+
+    parentBone.quaternion.premultiply(quaternion);
+    parentBone.updateMatrixWorld();
+
+    //set child bone position relative to the new parent matrix.
+    parentBone.children.forEach((childBone) => {
+        let childBonePosWorld = worldPos[childBone.id].clone();
+        childBonePosWorld = childBonePosWorld.reverseZ();
+        parentBone.worldToLocal(childBonePosWorld);
+        childBone.position.copy(childBonePosWorld);
+    });
+
+    parentBone.children.forEach((childBone) => {
+        reverseTransform(childBone, worldPos);
+    })
+}
+
+function setZForward(rootBone) {
     var worldPos = {};
     getOriginalWorldPositions(rootBone, worldPos);
     updateTransformations(rootBone, worldPos);
@@ -83,3 +155,4 @@ function getOriginalWorldPositions(rootBone, worldPos) {
         getOriginalWorldPositions(child, worldPos);
     })
 }
+export {setZForward, setReverseZ };

@@ -1,6 +1,6 @@
 import {IK, IKJoint} from "../../core/three-ik";
 import * as THREE from "three";
-import setZForward from "../../utils/axisUtils";
+import {setZForward, setReverseZ} from "../../utils/axisUtils";
 import ChainObject from "./ChainObject";
 
 // IKObject is class which applies ik onto skeleton
@@ -19,8 +19,17 @@ class IkObject
     {
         this.ik = new IK();
         let chains = [];
-        let rigMesh = scene.children[1];
+        let rigMesh = scene.children[0].children[1];
+
+        /*let clonedSkeleton = SkeletonUtils.clone(objectSkeleton);
+        console.log(objectSkeleton.children[0].clone());
+        console.log(clonedSkeleton.children[0].clone());*/
+
+    /*    this.originalObject = objectSkeleton;
+        this.clonedObject = clonedSkeleton;*/
+
         let skeleton = null;
+        console.log(scene);
         this.controlTargets = controlTarget[0];
 
         let chainObjects = [];
@@ -53,13 +62,21 @@ class IkObject
                         parent = parent.parent;
                     }
                     skeleton = parent;
+                   //skeleton.scale.copy(new THREE.Vector3(94, 94, 94));
+                   // rigMesh.updateMatrixWorld();
                 }
                 // Flips a model's forward from -Z to +Z
                 // By default Models axis is -Z while Three ik works with +Z
                 if(object.name === "Hips")
                 {
                     this.hips = object;
+                    console.log("Before", object.clone());
                     setZForward(object);
+
+                    console.log("After", object.clone());
+                    //setReverseZ(object);
+                    console.log("Reversed", object.clone());
+
                     rigMesh.bind(rigMesh.skeleton);
                 }
                 // Goes through all chain objects to find with which we are working
@@ -85,6 +102,9 @@ class IkObject
                         {
                             target = chainObject.controlTarget.target;
                             object.getWorldPosition(target.position)
+                            console.log(object.position);
+                            console.log(target.position);
+
                             chainObject.isChainObjectStarted = false
                         }
                         // Creates joint by passing current bone and its constraint
@@ -96,6 +116,7 @@ class IkObject
                 });
             }
         });
+
         // Goes through list of constraints and adds it to IK
         chains.forEach((chain) =>
         {
@@ -128,6 +149,19 @@ class IkObject
             this.ik.solve();
         }
         this.lateUpdate();
+    }
+
+    reinitialize()
+    {
+        let chainObjects = this.chainObjects;
+
+        for(let i = 0; i < chainObjects.length; i++)
+        {
+            let chain = chainObjects[i].chain;
+            console.log("reinit");
+            chain.joints[chain.joints.length - 1].bone.getWorldPosition(chainObjects[i].controlTarget.target.position);
+            chain.reinitializeJoints();
+        }
     }
 
     // Updates which is called last after all stuff in loop has been done
