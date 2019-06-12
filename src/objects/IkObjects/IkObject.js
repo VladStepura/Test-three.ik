@@ -1,52 +1,61 @@
 import {IK, IKJoint} from "../../core/three-ik";
 import * as THREE from "three";
-import {setZForward, setReverseZ} from "../../utils/axisUtils";
+import {setZDirecion, setReverseZ, setZBack} from "../../utils/axisUtils";
 import ChainObject from "./ChainObject";
+import SkeletonUtils from "../../utils/SkeletonUtils";
 
 // IKObject is class which applies ik onto skeleton
 class IkObject
 {
     constructor()
     {
+        if(new.target === IkObject)
+        {
+            throw new TypeError("Cannot construct abstract IkObject directly");
+        }
         this.applyingOffset = false;
-        this.neckRotation = null;
-        this.enableIk = true;
+        this.isEnabledIk = false;
         this.controlTargets = [];
+        this.originalObject = null;
+        this.clonedObject = null;
+        this.ikBonesName = [];
+        this.originalRotationDiffrenceOfBones = [];
+        this.zForwardDifference = [];
+        this.prevRotation = [];
     }
 
     // Takes skeleton and target for it's limbs
-    initObject(scene, ...controlTarget)
+    initObject(scene, objectSkeleton, skinnedMesh, applyBinding, ...controlTarget)
     {
         this.ik = new IK();
         let chains = [];
-        let rigMesh = scene.children[0].children[1];
 
-        /*let clonedSkeleton = SkeletonUtils.clone(objectSkeleton);
+        let clonedSkeleton = SkeletonUtils.clone(objectSkeleton);
         console.log(objectSkeleton.children[0].clone());
-        console.log(clonedSkeleton.children[0].clone());*/
+        console.log(clonedSkeleton.children[0].clone());
 
-    /*    this.originalObject = objectSkeleton;
-        this.clonedObject = clonedSkeleton;*/
+        this.originalObject = objectSkeleton;
+        this.clonedObject = clonedSkeleton;
+
+        this.rigMesh = clonedSkeleton.children[1];
+        let rigMesh = this.rigMesh;
+        let rigMeshOriginal = objectSkeleton.children[1];
 
         let skeleton = null;
-        console.log(scene);
         this.controlTargets = controlTarget[0];
-
+        this.addParentToControl(objectSkeleton.uuid);
         let chainObjects = [];
         this.chainObjects = chainObjects;
         this.hipsControlTarget = this.controlTargets[5];
 
         chainObjects.push(new ChainObject("Spine", "Head", this.controlTargets[0]));
-
         chainObjects.push(new ChainObject("LeftArm", "LeftHand", this.controlTargets[1]));
         chainObjects.push(new ChainObject("RightArm", "RightHand", this.controlTargets[2]));
         chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", this.controlTargets[3]));
         chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", this.controlTargets[4]));
-
-
-
+        scene.add(clonedSkeleton);
         // Goes through all scene objects
-        scene.traverse((object) =>
+        clonedSkeleton.traverse((object) =>
         {
             // Searches only bones object
             if(object instanceof THREE.Bone)
@@ -62,23 +71,50 @@ class IkObject
                         parent = parent.parent;
                     }
                     skeleton = parent;
-                   //skeleton.scale.copy(new THREE.Vector3(94, 94, 94));
-                   // rigMesh.updateMatrixWorld();
                 }
                 // Flips a model's forward from -Z to +Z
                 // By default Models axis is -Z while Three ik works with +Z
                 if(object.name === "Hips")
                 {
                     this.hips = object;
-                    console.log("Before", object.clone());
-                    setZForward(object);
+                    if(applyBinding === true)
+                    {
 
-                    console.log("After", object.clone());
-                    //setReverseZ(object);
-                    console.log("Reversed", object.clone());
+
+
+                    }
+                    setZDirecion(object, new THREE.Vector3(0, 0, 1));
 
                     rigMesh.bind(rigMesh.skeleton);
+                    setZBack(object);
+                    rigMesh.bind(rigMesh.skeleton);
+
+                    setZDirecion(this.originalObject.children[0], new THREE.Vector3(0, 0, 1));
+                    rigMeshOriginal.bind(rigMeshOriginal.skeleton);
+                    setZBack(this.originalObject.children[0]);
+                    rigMeshOriginal.bind(rigMeshOriginal.skeleton);
+                    ////setZDirecion(this.originalObject, new THREE.Vector3(0, 0, 1));
+                    //this.originalObject.updateMatrixWorld(true);
+                    //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
+                    ////setZBack(this.originalObject);
+                    //this.originalObject.updateMatrixWorld(true);
+                    ////rigMeshOriginal.bind(rigMeshOriginal.skeleton);
+
+                    //setReverseZ(object);
+
+                    this.originalObject.children[1].bind(this.originalObject.children[1].skeleton);
+                    object.updateWorldMatrix(true, true);
+                    let objectWorld = new THREE.Vector3();
+                    object.getWorldPosition(objectWorld);
+                    this.hipsControlTarget.target.position.copy(objectWorld);
                 }
+                let originBone = objectSkeleton.getObjectByName(object.name);
+                let difference = new THREE.Euler(0, 0, 0);
+                difference.x = object.rotation.x - originBone.rotation.x;
+                difference.y = object.rotation.y - originBone.rotation.y;
+                difference.z = object.rotation.z - originBone.rotation.z;
+                this.zForwardDifference.push(difference);
+                this.originalRotationDiffrenceOfBones.push(difference);
                 // Goes through all chain objects to find with which we are working
                 chainObjects.forEach((chainObject) =>
                 {
@@ -101,34 +137,52 @@ class IkObject
                         if(object.name === chainObject.lastObjectName)
                         {
                             target = chainObject.controlTarget.target;
-                            object.getWorldPosition(target.position)
-                            console.log(object.position);
-                            console.log(target.position);
+                            let objectWorld = new THREE.Vector3();
+                            object.getWorldPosition(objectWorld);
+                            target.position.copy(objectWorld);
 
-                            chainObject.isChainObjectStarted = false
+                            chainObject.isChainObjectStarted = false;
                         }
+                        this.ikBonesName.push(object.name);
                         // Creates joint by passing current bone and its constraint
                         let joint = new IKJoint(object, {});
+                        let globaPose = new THREE.Vector3();
                         // Adds joint to chain and sets target
                         chain.add(joint, {target});
-
                     }
                 });
+
+
             }
         });
-
+        scene.remove(clonedSkeleton);
         // Goes through list of constraints and adds it to IK
         chains.forEach((chain) =>
         {
             this.ik.add(chain);
         });
         // Sets skeleton helper for showing bones
-        let skeletonHelper = new THREE.SkeletonHelper( skeleton );
+        this.skeletonHelper = new THREE.SkeletonHelper( skeleton );
         // Sets line width of skeleton helper
-        skeletonHelper.material.linewidth = 3;
+        this.skeletonHelper.material.linewidth = 7;
+
         // Adds skeleton helper to scene
-        scene.add( skeletonHelper );
-        this.calculteBackOffset();
+        scene.add( this.skeletonHelper );
+        console.log("Rotation", this.originalRotationDiffrenceOfBones);
+        console.log("Cloned object", this.clonedObject);
+        console.log("Original object", this.originalObject);
+        /*  this.chainObjects[1].controlTarget.control.addEventListener('pointermove', ( event ) =>
+          {
+              let bone =  this.originalObject.getObjectByName("LeftHand");
+              let targetPosition =  this.chainObjects[1].controlTarget.target.position;
+              bone.getWorldPosition(targetPosition);
+          });
+          this.chainObjects[2].controlTarget.control.addEventListener('pointermove', ( event ) =>
+          {
+              let bone =  this.originalObject.getObjectByName("RightHand");
+              let targetPosition =  this.chainObjects[2].controlTarget.target.position;
+              bone.getWorldPosition(targetPosition);
+          });*/
     }
 
     // Calculates back's offset in order to move with hips
@@ -143,24 +197,16 @@ class IkObject
     // Only done this left limbs in order to see difference
     update()
     {
-        if(this.enableIk)
+        if(this.isEnabledIk)
         {
             // Solves the inverse kinematic of object
             this.ik.solve();
-        }
-        this.lateUpdate();
-    }
 
-    reinitialize()
-    {
-        let chainObjects = this.chainObjects;
-
-        for(let i = 0; i < chainObjects.length; i++)
-        {
-            let chain = chainObjects[i].chain;
-            console.log("reinit");
-            chain.joints[chain.joints.length - 1].bone.getWorldPosition(chainObjects[i].controlTarget.target.position);
-            chain.reinitializeJoints();
+            if(IK.firstRun)
+            {
+                this.recalculateDifference();
+            }
+            this.lateUpdate();
         }
     }
 
@@ -180,7 +226,126 @@ class IkObject
             backTarget.position.copy(result);
         }
         // Follows hips target
-        this.hips.position.copy(hipsTarget.position);
+        let targetPosition = hipsTarget.position.clone();
+        this.hips.parent.worldToLocal(targetPosition);
+        this.hips.position.copy(targetPosition);
+    }
+
+    // Removes ikObject's all elements from scene
+    // Control target consists of two things: mesh and control
+    // before removed mesh should be detached from control
+    removeFromScene(scene)
+    {
+        this.chainObjects.forEach((chainObject) =>
+        {
+            let control = chainObject.controlTarget.control;
+            let target = chainObject.controlTarget.target;
+            control.detach(target);
+            scene.remove(target);
+            scene.remove(control);
+        });
+        this.hipsControlTarget.control.detach(this.hipsControlTarget.target);
+        scene.remove(this.hipsControlTarget.target);
+        scene.remove(this.hipsControlTarget.control);
+        scene.remove(this.skeletonHelper);
+    }
+
+    // Resets targets position
+    // After IK has been turned off and on
+    resetTargets()
+    {
+        let chainObjects = this.chainObjects;
+        this.hips.getWorldPosition(this.hipsControlTarget.target.position);
+        for(let i = 0; i < chainObjects.length; i++)
+        {
+            let chain = chainObjects[i].chain;
+            let jointBone = chain.joints[chain.joints.length - 1].bone;
+            if(jointBone.name === "LeftFoot" || jointBone.name === "RightFoot" ||
+                jointBone.name === "LeftHand" || jointBone.name === "RightHand" ||
+                jointBone.name === "Neck" || jointBone.name === "Hips")
+            {
+                let targetPosition = chainObjects[i].controlTarget.target.position;
+                jointBone.getWorldPosition(targetPosition);
+            }
+            else
+            {
+                let bone =  this.originalObject.getObjectByName(jointBone.name);
+                let targetPosition = chainObjects[i].controlTarget.target.position;
+                bone.getWorldPosition(targetPosition);
+            }
+
+        }
+        this.calculteBackOffset();
+    }
+
+    // Recalculates positions of transform controls
+    // It works when ik is disable and when enabled in order to recalculate all position
+    // Which have been changed while ik was turned off
+    recalculate()
+    {
+        let back = this.chainObjects[0].chain.joints[4].bone;
+        let backTarget = this.chainObjects[0].controlTarget.target;
+
+        let leftHand = this.chainObjects[1].chain.joints[2].bone;
+        let leftHandTarget = this.chainObjects[1].controlTarget.target;
+
+        let rightHand = this.chainObjects[2].chain.joints[2].bone;
+        let rightHandTarget = this.chainObjects[2].controlTarget.target;
+
+        let leftLeg = this.chainObjects[3].chain.joints[2].bone;
+        let leftLegTarget = this.chainObjects[3].controlTarget.target;
+
+        let rightLeg = this.chainObjects[4].chain.joints[2].bone;
+        let rightLegTarget = this.chainObjects[4].controlTarget.target;
+
+        back.getWorldPosition(backTarget.position);
+        leftHand.getWorldPosition(leftHandTarget.position);
+        rightHand.getWorldPosition(rightHandTarget.position);
+        leftLeg.getWorldPosition(leftLegTarget.position);
+        rightLeg.getWorldPosition(rightLegTarget.position);
+        this.calculteBackOffset();
+    }
+
+    addParentToControl(parentId)
+    {
+        let controlTarget = this.controlTargets;
+        for (let i = 0; i < controlTarget.length; i++)
+        {
+            let control = controlTarget[i].control;
+            control.characterId = parentId;
+        }
+    }
+
+    recalculateDifference()
+    {
+        console.log("Recalculate");
+        this.originalRotationDiffrenceOfBones = [];
+        let clonedSkin = this.clonedObject.children[1];
+        let originalSkin = this.originalObject.children[1];
+        let clonedBones = clonedSkin.skeleton.bones;
+        let originalBones = originalSkin.skeleton.bones;
+        let originalHips = originalBones[0];
+        let clonedHips = clonedBones[0];
+        let matrix = originalHips.matrixWorld.clone();
+        let inverseMatrix = new THREE.Matrix4().getInverse(matrix);
+        clonedHips.applyMatrix(inverseMatrix);
+        clonedHips.updateMatrixWorld(true);
+        for (let i = 0; i < clonedBones.length; i++)
+        {
+            let originBone = originalBones[i];
+            let cloneBone = clonedBones[i];
+            let difference = new THREE.Euler(0, 0, 0);
+            let cloneQuaternion = cloneBone.rotation; //new THREE.Quaternion();
+            let originalQuaternion = originBone.rotation;//new THREE.Quaternion();
+            //cloneBone.getWorldQuaternion(cloneQuaternion);
+            //originBone.getWorldQuaternion(originalQuaternion);
+            difference.x = cloneQuaternion.x - originalQuaternion.x;
+            difference.y = cloneQuaternion.y - originalQuaternion.y;
+            difference.z = cloneQuaternion.z - originalQuaternion.z;
+            this.originalRotationDiffrenceOfBones.push(difference);
+        }
+        clonedHips.applyMatrix(matrix);
+        clonedHips.updateMatrixWorld(true);
     }
 
 }

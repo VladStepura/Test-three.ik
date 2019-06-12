@@ -19,9 +19,9 @@ class RagDollGui
             -Math.PI * 1, Math.PI * 1);
         gui.addVectorSlider(leftLegTarget.rotation, "Left target rotation",
             -Math.PI * 1, Math.PI * 1);
-        gui.datGui.add(ragDoll, "enableIk").onChange(() =>
+        gui.datGui.add(ragDoll, "isEnabledIk").onChange(() =>
         {
-            if(ragDoll.enableIk)
+            if(ragDoll.isEnabledIk)
             {
                 this.recalculate();
             }

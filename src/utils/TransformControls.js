@@ -306,7 +306,6 @@ export const TransformControls = function ( camera, domElement ) {
 			space = 'world';
 
 		}
-		console.log(pointer);
 		if ( object === undefined || axis === null || this.dragging === false || ( pointer.button !== undefined && pointer.button !== 0 ) ) return;
 
 		ray.setFromCamera( pointer, this.camera );

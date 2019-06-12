@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {OrbitControls} from "./utils/OrbitControls";
 import MyGLTFLoader from "./loaders/MyGLTFLoader";
 import TargetControl from "./objects/TargetControl";
-import RagDoll from "./objects/IkObjects/RagDoll";
+import Ragdoll from "./objects/IkObjects/Ragdoll";
 import Stats from "stats-js/src/Stats";
 import RagDollGui from "./objects/RagDollGui";
 
@@ -63,12 +63,22 @@ class App
         //#region Loader
         let loadedObject = {};
         const gltfLoader = new MyGLTFLoader();
+        let moveX = 0;
+        let applyBinding = true;
         gltfLoader.loaded = (gltf) =>
         {
-            loadedObject = new RagDoll();
-            loadedObject.initObject(gltf.scene, backControl, leftHandControl,
+            //object.current, object.current.children[1]
+            let object = gltf.scene.children[0];
+            object.position.x = moveX;
+            moveX += 1.5;
+
+            object.updateMatrixWorld(true);
+
+            loadedObject = new Ragdoll();
+            loadedObject.initObject(gltf.scene, object, object.children[1], applyBinding, backControl, leftHandControl,
                                     rightHandControl, leftLegControl, rightLegControl,
                                     hipsControl);
+            applyBinding = false;
             this.iKObjects.push(loadedObject);
             let ragDollGui = new RagDollGui(loadedObject);
             ragDollGui.initGui();
@@ -79,8 +89,10 @@ class App
             //gltf.scene.children[0].updateMatrixWorld()
             //gltf.scene.children[0].rotateZ(180);
             loadedObject.reinitialize();
+            loadedObject.applyChangesToIK();
         }
         gltfLoader.loadToScene('./assets/adult-male.glb', scene);
+        //gltfLoader.loadToScene('./assets/adult-male.glb', scene);
         //gltfLoader.loadToScene('./assets/male-adult-testforik.glb', scene);
         //#endregion
     }

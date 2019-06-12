@@ -15,7 +15,7 @@ const q = new THREE.Quaternion();
 const p = new THREE.Plane();
 const FORWARD = new THREE.Vector3(0,0,1);
 var RESETQUAT = new THREE.Quaternion();
-
+const previousDirection = {};
 /**
  * Takes in a rootBone and recursively traverses the bone heirarchy,
  * setting each bone's +Z axis to face it's child bones. The IK system follows this
@@ -97,13 +97,14 @@ function reverseTransform(parentBone, worldPos)
     })
 }
 
-function setZForward(rootBone) {
+function setZDirecion(rootBone, zAxis) {
     var worldPos = {};
     getOriginalWorldPositions(rootBone, worldPos);
-    updateTransformations(rootBone, worldPos);
+    updateTransformations(rootBone, worldPos, zAxis);
+
 }
 
-function updateTransformations(parentBone, worldPos) {
+function updateTransformations(parentBone, worldPos, zAxis) {
 
     var averagedDir = new THREE.Vector3();
     parentBone.children.forEach((childBone) => {
@@ -119,8 +120,9 @@ function updateTransformations(parentBone, worldPos) {
     parentBone.updateMatrixWorld();
     //get the child bone position in local coordinates
     var childBoneDir = parentBone.worldToLocal(averagedDir).normalize();
+    previousDirection[parentBone.id] = childBoneDir;
     //set the direction to child bone to the forward direction
-    var quat = getAlignmentQuaternion(FORWARD, childBoneDir);
+    var quat = getAlignmentQuaternion(zAxis, childBoneDir);
     if (quat) {
         //rotate parent bone towards child bone
         parentBone.quaternion.premultiply(quat);
@@ -133,8 +135,10 @@ function updateTransformations(parentBone, worldPos) {
         });
     }
 
+    //parentBone.rotateX();
+    parentBone.updateMatrixWorld();
     parentBone.children.forEach((childBone) => {
-        updateTransformations(childBone, worldPos);
+        updateTransformations(childBone, worldPos, zAxis);
     })
 }
 
@@ -155,4 +159,52 @@ function getOriginalWorldPositions(rootBone, worldPos) {
         getOriginalWorldPositions(child, worldPos);
     })
 }
-export {setZForward, setReverseZ };
+
+function setZBack(rootBone)
+{
+    var worldPos = {};
+    getOriginalWorldPositions(rootBone, worldPos);
+    console.log(previousDirection[rootBone.id]);
+    let zAxis = previousDirection[rootBone.id].clone();
+    updateTransformationsBack(rootBone, worldPos, zAxis);
+}
+
+function updateTransformationsBack(parentBone, worldPos, zAxis) {
+
+    var averagedDir = new THREE.Vector3();
+    parentBone.children.forEach((childBone) => {
+        //average the child bone world pos
+        var childBonePosWorld = worldPos[childBone.id];
+        averagedDir.add(childBonePosWorld);
+    });
+
+    averagedDir.multiplyScalar(1/(parentBone.children.length));
+
+    //set quaternion
+    parentBone.quaternion.copy(RESETQUAT);
+    parentBone.updateMatrixWorld();
+    //get the child bone position in local coordinates
+    var childBoneDir = parentBone.worldToLocal(averagedDir).normalize();
+    previousDirection[parentBone.id] = childBoneDir;
+    //set the direction to child bone to the forward direction
+    var quat = getAlignmentQuaternion(zAxis, childBoneDir);
+    if (quat) {
+        //rotate parent bone towards child bone
+        parentBone.quaternion.premultiply(quat);
+        parentBone.updateMatrixWorld();
+        //set child bone position relative to the new parent matrix.
+        parentBone.children.forEach((childBone) => {
+            var childBonePosWorld = worldPos[childBone.id].clone();
+            parentBone.worldToLocal(childBonePosWorld);
+            childBone.position.copy(childBonePosWorld);
+        });
+    }
+
+    //parentBone.rotateX();
+    parentBone.updateMatrixWorld();
+    parentBone.children.forEach((childBone) => {
+        zAxis = previousDirection[childBone.id].clone();
+        updateTransformationsBack(childBone, worldPos, zAxis);
+    })
+}
+export {setZDirecion, setReverseZ, setZBack };

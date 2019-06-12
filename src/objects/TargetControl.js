@@ -7,9 +7,25 @@ class TargetControl
     {
         this.control = new TransformControls( camera, domElement );
         this.control.size = 0.5
+        this.isSelected = false;
+        this.name = name;
+        this.disabled = false;
         this.control.addEventListener('dragging-changed', ( event ) =>
         {
             orbitControl.enabled = ! event.value;
+        });
+        this.control.addEventListener('mouseDown', (event) =>
+        {
+            let control = this.control;
+            if(this.disabled && control.dragging)
+            {
+                console.log("Pointer down");
+                control.dragging = false;
+            }
+        });
+        this.control.addEventListener('mouseUp', (event) =>
+        {
+
         });
     }
 
@@ -33,4 +49,5 @@ class TargetControl
         this.target = mesh;
     }
 }
+TargetControl.selected = false;
 export default TargetControl;
