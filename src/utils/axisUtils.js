@@ -38,6 +38,7 @@ THREE.Quaternion.prototype.toAngleAxis = function toAngleAxis()
     y = isFinite(y) ? y : 0;
     z = isFinite(z) ? z : 0;
     let axis = new THREE.Vector3(x, y, z);
+    axis.normalize();
     return {angle: angle, axis: axis};
 }
 THREE.Vector3.prototype.reverseZ = function reverseZ()

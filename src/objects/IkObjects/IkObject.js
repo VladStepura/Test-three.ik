@@ -86,13 +86,13 @@ class IkObject
                     setZDirecion(object, new THREE.Vector3(0, 0, 1));
 
                     rigMesh.bind(rigMesh.skeleton);
-                    setZBack(object);
-                    rigMesh.bind(rigMesh.skeleton);
-
-                    setZDirecion(this.originalObject.children[0], new THREE.Vector3(0, 0, 1));
-                    rigMeshOriginal.bind(rigMeshOriginal.skeleton);
-                    setZBack(this.originalObject.children[0]);
-                    rigMeshOriginal.bind(rigMeshOriginal.skeleton);
+                    //setZBack(object);
+                    //rigMesh.bind(rigMesh.skeleton);
+//
+                    //setZDirecion(this.originalObject.children[0], new THREE.Vector3(0, 0, 1));
+                    //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
+                    //setZBack(this.originalObject.children[0]);
+                    //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
                     ////setZDirecion(this.originalObject, new THREE.Vector3(0, 0, 1));
                     //this.originalObject.updateMatrixWorld(true);
                     //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
@@ -262,7 +262,7 @@ class IkObject
             let jointBone = chain.joints[chain.joints.length - 1].bone;
             if(jointBone.name === "LeftFoot" || jointBone.name === "RightFoot" ||
                 jointBone.name === "LeftHand" || jointBone.name === "RightHand" ||
-                jointBone.name === "Neck" || jointBone.name === "Hips")
+                jointBone.name === "Head" || jointBone.name === "Hips")
             {
                 let targetPosition = chainObjects[i].controlTarget.target.position;
                 jointBone.getWorldPosition(targetPosition);
