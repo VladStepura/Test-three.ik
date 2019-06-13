@@ -81,7 +81,7 @@ class App
             applyBinding = false;
             this.iKObjects.push(loadedObject);
             let ragDollGui = new RagDollGui(loadedObject);
-            ragDollGui.initGui();
+            //ragDollGui.initGui();
             console.log(gltf.scene);
             //let scale = 20;
             //gltf.scene.children[0].children[0].rotation.set(0, 0, 0);
