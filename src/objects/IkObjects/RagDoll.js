@@ -14,7 +14,7 @@ class Ragdoll extends IkObject
         this.poleConstraints = [];
         this.poleTargetOffsets = {};
         this.hipsMouseDown = false;
-        this.vectorPos = 0.1;
+        this.vectorPos = 1;
     }
 
     initObject(scene, object, skinnedMesh, applyBinding, ...controlTarget )
@@ -210,12 +210,12 @@ class Ragdoll extends IkObject
         let rightFootBone = this.ik.chains[4].joints[2].bone;
         let rightLegChainTarget = this.chainObjects[4].controlTarget.target;
         rightFootBone.rotation.copy(rightLegChainTarget.rotation);
-        this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(0.5, 0, 0));
+        this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(2.5, 0, 0));
         // Makes left foot follow the rotation of target
         let leftFootBone = this.ik.chains[3].joints[2].bone;
         let leftLegChainTarget = this.chainObjects[3].controlTarget.target;
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
-        this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(0.5, 0, 0));
+        this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(2.5, 0, 0));
     }
 
      // Sets and quaternion angle for bones
@@ -324,8 +324,6 @@ class Ragdoll extends IkObject
 
     applyChangesToOriginal()
     {
-
-
         let clonedSkin = this.clonedObject.children[1];
         let originalSkin = this.originalObject.children[1];
         let clonedBones = clonedSkin.skeleton.bones;
@@ -333,12 +331,8 @@ class Ragdoll extends IkObject
 
         let originalHips = originalBones[0];
         let clonedHips = clonedBones[0];
-        //originalSkin.bind(originalSkin.skeleton);
-        //setZDirecion(originalHips, new THREE.Vector3(0, 0, 1));
-        //originalSkin.bind(originalSkin.skeleton);
         let matrix = originalHips.matrixWorld.clone();
         let inverseMatrix = new THREE.Matrix4().getInverse(matrix);
-
 
         let transformationMatrix = new THREE.Matrix4();
         let cloneMatrix     = new THREE.Matrix4();
@@ -351,9 +345,7 @@ class Ragdoll extends IkObject
         let rootCloneObject = null;
         //console.log("object in clone space", cloneObject.clone());
         let rootOriginalObject = null;
-        //console.log("object in original space", originalObject.clone());
 
-        let newRotation = {};
         let chainObjects = this.chainObjects;
         for (let i = 1; i < clonedBones.length; i++)
         {
@@ -382,8 +374,11 @@ class Ragdoll extends IkObject
                let joints = chainObjects[0].chain.joints;
                if(originalBone.name === joints[0].bone.name)
                {
-                   cloneMatrix = cloneBone.matrix;
-                   originalMatrix = originalBone.matrix;
+                   cloneMatrix = this.cloneObjectMatrix[originalBone.name];
+                   originalMatrix = this.originalObjectMatrix[originalBone.name];
+                   console.log(cloneMatrix);
+                   //cloneMatrix = this.createMatrixFromBasis(cloneBone.matrix);
+                   //originalMatrix = this.createMatrixFromBasis(originalBone.matrix);
                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
                    transformationMatrix = new THREE.Matrix4();
@@ -395,51 +390,48 @@ class Ragdoll extends IkObject
                    rootCloneObject = cloneBone;
                    rootOriginalObject = originalBone;
                    rootCloneObject.applyMatrix(transformationMatrix);
+                   originalBone.rotation.copy(cloneBone.rotation);
+                   chainObjects[0].updateMatrix();
                    //console.log("Translated object from original space", rootCloneObject.clone());
-                   rootCloneObject.updateWorldMatrix(false, true);
+                   //rootCloneObject.updateWorldMatrix(false, true);
                    //console.log("Translated object from original space", rootCloneObject.clone());
                }
-               originalBone.rotation.copy(cloneBone.rotation);
+               else
+               {
+                   originalBone.rotation.copy(cloneBone.rotation);
+               }
                if(originalBone.name === joints[joints.length-1].bone.name)
                {
                   // originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
                    rootCloneObject.applyMatrix(inverseTransformation);
+                   chainObjects[0].updateMatrix();
                    //console.log("Inversed object to original space", rootOriginalObject.clone());
-                   rootCloneObject.updateWorldMatrix(false, true);
+                   //rootCloneObject.updateWorldMatrix(false, true);
                }
-
-                //newRotation[cloneBone.name] = cloneBone.rotation.clone();
-               //originalBone.position.set(cloneBone.position.x, cloneBone.position.y, cloneBone.position.z);
-
-
-
            }
            else if(this.chainContainsBone(chainObjects[3].chain, originalBone) ||
                this.chainContainsBone(chainObjects[4].chain, originalBone) )
            {
-               //let yRotation = prevRotation === undefined ? newOrigin.y : prevRotation.rotation.y;
-               //originalBone.rotation.set(newOrigin.x, newOrigin.y, newOrigin.z);
-
                if(originalBone.name === "LeftUpLeg" || originalBone.name === "RightUpLeg")
                {
-                   cloneMatrix = cloneBone.matrix.clone();
-                   originalMatrix = originalBone.matrix.clone();
+                   //this.basisSwitchin(originalBone, cloneBone);
+                   cloneMatrix = this.cloneObjectMatrix[originalBone.name];
+                   originalMatrix = this.originalObjectMatrix[originalBone.name];
                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
                    transformationMatrix = new THREE.Matrix4();
                    transformationMatrix.multiply(originalMatrix);
                    transformationMatrix.multiply(cloneMatrixInverse);
 
-                   inverseTransformation.getInverse(transformationMatrix.clone());
+                   inverseTransformation.getInverse(transformationMatrix);
 
                    rootCloneObject = cloneBone;
                    rootOriginalObject = originalBone;
                    rootCloneObject.applyMatrix(transformationMatrix);
+                   chainObjects[3].updateMatrix();
+                   chainObjects[4].updateMatrix();
                    //console.log("Translated object from original space", rootCloneObject.clone());
-                   rootCloneObject.updateWorldMatrix(false, true);
-                   console.log("Before", originalBone.clone());
-                   //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
-                   console.log("AFter", originalBone.clone());
+                   //rootCloneObject.updateWorldMatrix(false, true);
                    //console.log("Translated object from original space", rootCloneObject.clone());
                }
                originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
@@ -447,12 +439,10 @@ class Ragdoll extends IkObject
                {
                    //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
                    rootCloneObject.applyMatrix(inverseTransformation);
+                   chainObjects[3].updateMatrix();
+                   chainObjects[4].updateMatrix();
                    //console.log("Inversed object to original space", rootOriginalObject.clone());
-                   rootCloneObject.updateWorldMatrix(false, true);
-               }
-               else
-               {
-
+                   //rootCloneObject.updateWorldMatrix(false, true);
                }
            }
            else if(this.chainContainsBone(chainObjects[1].chain, originalBone) ||
@@ -466,8 +456,8 @@ class Ragdoll extends IkObject
                let joints = chainObjects[0].chain.joints;
                if(originalBone.name === "LeftArm" || originalBone.name === "RightArm")
                {
-                   cloneMatrix = cloneBone.matrix.clone();
-                   originalMatrix = originalBone.matrix.clone();
+                   cloneMatrix = this.cloneObjectMatrix[originalBone.name];
+                   originalMatrix = this.originalObjectMatrix[originalBone.name];
                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
                    transformationMatrix = new THREE.Matrix4();
@@ -479,11 +469,10 @@ class Ragdoll extends IkObject
                    rootCloneObject = cloneBone;
                    rootOriginalObject = originalBone;
                    rootCloneObject.applyMatrix(transformationMatrix);
+                   chainObjects[1].updateMatrix();
+                   chainObjects[2].updateMatrix();
                    //console.log("Translated object from original space", rootCloneObject.clone());
-                   rootCloneObject.updateWorldMatrix(false, true);
-                   console.log("Before", originalBone.clone());
-                   //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
-                   console.log("AFter", originalBone.clone());
+                   //rootCloneObject.updateWorldMatrix(false, true);
                    //console.log("Translated object from original space", rootCloneObject.clone());
                }
                originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
@@ -491,8 +480,10 @@ class Ragdoll extends IkObject
                {
                    //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
                    rootCloneObject.applyMatrix(inverseTransformation);
+                   chainObjects[1].updateMatrix();
+                   chainObjects[2].updateMatrix();
                    //console.log("Inversed object to original space", rootOriginalObject.clone());
-                   rootCloneObject.updateWorldMatrix(false, true);
+                   //rootCloneObject.updateWorldMatrix(false, true);
                }
            }
            //else
@@ -565,6 +556,18 @@ class Ragdoll extends IkObject
         let matrix = originalHips.matrixWorld.clone();
         let inverseMatrix = new THREE.Matrix4().getInverse(matrix);
 
+        let transformationMatrix = new THREE.Matrix4();
+        let cloneMatrix     = new THREE.Matrix4();
+        let originalMatrix  = new THREE.Matrix4();
+        let cloneMatrixInverse     = new THREE.Matrix4();
+        let originalMatrixInverse  = new THREE.Matrix4();
+        //transformationMatrix.multiply(cloneMatrix.clone());
+        //transformationMatrix.multiply(originalMatrixInverse.clone());
+        let inverseTransformation = new THREE.Matrix4();
+        let rootCloneObject = null;
+        //console.log("object in clone space", cloneObject.clone());
+        let rootOriginalObject = null;
+
         for (let i = 0; i < clonedBones.length; i++)
         {
             let cloneBone = clonedBones[i];
@@ -586,47 +589,104 @@ class Ragdoll extends IkObject
                                            cloneBone.rotation.y + newAngle.y,
                                            cloneBone.rotation.z + newAngle.z);
 
-           // if(this.chainContainsBone(chainObjects[3].chain, originalBone) ||
-           //     this.chainContainsBone(chainObjects[4].chain, originalBone))
-           // {
-           //     let yRotation = prevRotation === undefined ? newClone.z : prevRotation.rotation.z;
-           //     cloneBone.rotation.set(newClone.x, yRotation, newClone.y);
-           //     // cloneBone.position.set(newClonePos.x, newClonePos.y, newClonePos.z);
-//
-           // }
-           // else if(this.chainContainsBone(chainObjects[1].chain, originalBone) ||
-           //     this.chainContainsBone(chainObjects[2].chain, originalBone))
-           // {
-           //     let yRotation = prevRotation === undefined ? newClone.z : prevRotation.rotation.z;
-           //     cloneBone.rotation.set(newClone.x, yRotation, newClone.y);
-           //     // cloneBone.position.set(newClonePos.x, newClonePos.y, newClonePos.z);
-           // }
-           // else
-           // {
-                //let yRotation = prevRotation === undefined ? newClone.z : prevRotation.rotation.z;
-                //originalBone.rotation.set(newOrigin.x, yRotation, -newOrigin.y);
-                //cloneBone.rotation.set(newClone.x, newClone.y, newClone.z);
-                //cloneBone.rotation.set(originalBone.rotation.x, originalBone.rotation.y, originalBone.rotation.z);
-                //cloneBone.position.set(originalBone.position.x, originalBone.position.y, originalBone.position.z);
-            //cloneBone.position.set(newClonePos.x, newClonePos.y, newClonePos.z);
-            //}
-//
-            //let globalOriginPose = new THREE.Vector3();
-            //originalBone.getWorldPosition(globalOriginPose);
-            //clonedHips.worldToLocal(globalOriginPose);
-            //let adjust = new THREE.Vector3();
-            //const adjustAxis = adjust.crossVectors(globalOriginPose, cloneBone.position).normalize();
-            //const adjustAngle = globalOriginPose.angleTo(cloneBone.position);
-            //if(cloneBone.name === "LeftArm")
-            //{
-            //    console.log("Origin to local", globalOriginPose);
-            //    console.log("Clone", cloneBone.position );
-            //}
-            //if (adjustAngle) {
-            //    let q = new Quaternion();
-            //    const adjustQuat = q.setFromAxisAngle(adjustAxis, adjustAngle);
-            //    cloneBone.quaternion.copy(adjustQuat);
-            //}
+           /* if(this.chainContainsBone(chainObjects[0].chain, originalBone))
+            {
+                let joints = chainObjects[0].chain.joints;
+                if(originalBone.name === joints[0].bone.name)
+                {
+                    cloneMatrix = cloneBone.matrix;
+                    originalMatrix = originalBone.matrix;
+                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
+                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
+                    transformationMatrix = new THREE.Matrix4();
+                    transformationMatrix.multiply(originalMatrix.clone());
+                    transformationMatrix.multiply(cloneMatrixInverse.clone());
+
+                    inverseTransformation.getInverse(transformationMatrix.clone());
+
+                    rootCloneObject = cloneBone;
+                    rootOriginalObject = originalBone;
+                    rootCloneObject.applyMatrix(transformationMatrix);
+                    rootCloneObject.updateWorldMatrix(false, true);
+                }
+                originalBone.rotation.copy(cloneBone.rotation);
+                if(originalBone.name === joints[joints.length-1].bone.name)
+                {
+                    rootCloneObject.applyMatrix(inverseTransformation);
+                    rootCloneObject.updateWorldMatrix(false, true);
+                }
+            }
+            else if(this.chainContainsBone(chainObjects[3].chain, originalBone) ||
+                this.chainContainsBone(chainObjects[4].chain, originalBone) )
+            {
+                //let yRotation = prevRotation === undefined ? newOrigin.y : prevRotation.rotation.y;
+                //originalBone.rotation.set(newOrigin.x, newOrigin.y, newOrigin.z);
+
+                if(originalBone.name === "LeftUpLeg" || originalBone.name === "RightUpLeg")
+                {
+                    cloneMatrix = cloneBone.matrix.clone();
+                    originalMatrix = originalBone.matrix.clone();
+                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
+                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
+                    transformationMatrix = new THREE.Matrix4();
+                    transformationMatrix.multiply(originalMatrix);
+                    transformationMatrix.multiply(cloneMatrixInverse);
+
+                    inverseTransformation.getInverse(transformationMatrix.clone());
+
+                    rootCloneObject = cloneBone;
+                    rootOriginalObject = originalBone;
+                    rootCloneObject.applyMatrix(transformationMatrix);
+                    //console.log("Translated object from original space", rootCloneObject.clone());
+                    rootCloneObject.updateWorldMatrix(false, true);
+                    //console.log("Translated object from original space", rootCloneObject.clone());
+                }
+                originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
+                if(originalBone.name === "LeftFoot" || originalBone.name === "RightFoot")
+                {
+                    //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
+                    rootCloneObject.applyMatrix(inverseTransformation);
+                    //console.log("Inversed object to original space", rootOriginalObject.clone());
+                    rootCloneObject.updateWorldMatrix(false, true);
+                }
+            }
+            else if(this.chainContainsBone(chainObjects[1].chain, originalBone) ||
+                this.chainContainsBone(chainObjects[2].chain, originalBone))
+            {
+                if(originalBone.name === "LeftArm" )
+                {
+                    //this.basisSwitchin(originalBone, cloneBone);
+                }
+
+                let joints = chainObjects[0].chain.joints;
+                if(originalBone.name === "LeftArm" || originalBone.name === "RightArm")
+                {
+                    cloneMatrix = cloneBone.matrix.clone();
+                    originalMatrix = originalBone.matrix.clone();
+                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
+                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
+                    transformationMatrix = new THREE.Matrix4();
+                    transformationMatrix.multiply(originalMatrix);
+                    transformationMatrix.multiply(cloneMatrixInverse);
+
+                    inverseTransformation.getInverse(transformationMatrix.clone());
+
+                    rootCloneObject = cloneBone;
+                    rootOriginalObject = originalBone;
+                    rootCloneObject.applyMatrix(transformationMatrix);
+                    //console.log("Translated object from original space", rootCloneObject.clone());
+                    rootCloneObject.updateWorldMatrix(false, true);
+                    //console.log("Translated object from original space", rootCloneObject.clone());
+                }
+                originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
+                if(originalBone.name === "LeftHand" || originalBone.name === "RightHand")
+                {
+                    //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
+                    rootCloneObject.applyMatrix(inverseTransformation);
+                    //console.log("Inversed object to original space", rootOriginalObject.clone());
+                    rootCloneObject.updateWorldMatrix(false, true);
+                }
+            }*/
         }
     }
 
@@ -649,59 +709,88 @@ class Ragdoll extends IkObject
     createMatrixFromBasis(matrix)
     {
         let x = new THREE.Vector3();
-        let y = new THREE.Vector3();
+        let y = new THREE.Quaternion();
         let z = new THREE.Vector3();
         let newMatrix = new THREE.Matrix4();
-        matrix.extractBasis(x, y, z);
-        newMatrix.makeBasis(x, y, z);
+        matrix.decompose(x, y, z);
+        console.log("Position", x);
+        console.log("Rotation", y);
+        console.log("Scale", z);
+        newMatrix.setPosition(x);
         return newMatrix;
     }
 
     basisSwitchin(originalBone, cloneBone)
     {
         console.log("Switching basis");
-
-        let transformationMatrix = new THREE.Matrix4();
+        let basicMatrix = this.createBasicMatrix();
+        let basicMatrixInverse = new THREE.Matrix4().getInverse(basicMatrix);
+        let transformationMatrixOrigin = new THREE.Matrix4();
+        let transformationMatrixClone = new THREE.Matrix4();
         let cloneMatrix     = new THREE.Matrix4();
         let originalMatrix  = new THREE.Matrix4();
+        let basixMatrixInverse  = new THREE.Matrix4();
         let cloneMatrixInverse     = new THREE.Matrix4();
         let originalMatrixInverse  = new THREE.Matrix4();
         //transformationMatrix.multiply(cloneMatrix.clone());
         //transformationMatrix.multiply(originalMatrixInverse.clone());
-        let inverseTransformation = new THREE.Matrix4();
+        let inverseTransformationOrigin = new THREE.Matrix4();
+        let inverseTransformationClone = new THREE.Matrix4();
         let rootCloneObject = null;
         //console.log("object in clone space", cloneObject.clone());
         let rootOriginalObject = null;
-        this.vectorPos++;
         let vector = new THREE.Vector3(this.vectorPos,0 ,0 );
         let vectorOrigin = new THREE.Vector3(this.vectorPos,0 ,0 );
 
         cloneBone.updateMatrix();
         originalBone.updateMatrix();
-        cloneMatrix = cloneBone.matrix;
-        originalMatrix = originalBone.matrix
+        cloneMatrix =  this.cloneObjectMatrix ;
+        originalMatrix = this.originalObjectMatrix;
+
         vector.applyMatrix4(cloneMatrix);
         vectorOrigin.applyMatrix4(originalMatrix);
         cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
         originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
 
         //transformationMatrix.multiply(originalMatrix);
-        transformationMatrix.multiply(cloneMatrix);
-        transformationMatrix.multiply(originalMatrixInverse);
+        transformationMatrixOrigin.multiply(basicMatrix.clone());
+        transformationMatrixOrigin.multiply(originalMatrixInverse.clone());
+        transformationMatrixClone.multiply(basicMatrix.clone());
+        transformationMatrixClone.multiply(cloneMatrixInverse.clone());
         //transformationMatrix.multiplyMatrices(originalMatrix, cloneMatrix);
         //transformationMatrix.multiplyMatrices(transformationMatrix.clone(), cloneMatrixInverse);
-        inverseTransformation.getInverse(transformationMatrix);
+        inverseTransformationOrigin.getInverse(transformationMatrixOrigin.clone());
+        inverseTransformationClone.getInverse(transformationMatrixClone.clone());
+
+
+        //let transformMatrixBasisToOrigin = new THREE.Matrix4();
 
         rootCloneObject = cloneBone;
         rootOriginalObject = originalBone;
-        console.log("RootClone", rootCloneObject.clone());
-        console.log("RootOriginal", rootOriginalObject.clone());
-        //rootCloneObject.matrix.copy(new THREE.Matrix4());
-
-        vectorOrigin.applyMatrix4(transformationMatrix);
-        //console.log("Vector", vector.clone());
-        //console.log("Vector Origin", vectorOrigin.clone());
-        rootOriginalObject.applyMatrix(transformationMatrix);
+        //console.log("RootClone", rootCloneObject.clone());
+        //console.log("RootOriginal", rootOriginalObject.clone());
+        ////rootCloneObject.matrix.copy(new THREE.Matrix4());
+        //console.log("Start Vector clone", vector.clone());
+        //console.log("Start Vector Origin", vectorOrigin.clone());
+//
+        //vectorOrigin.applyMatrix4(transformationMatrixOrigin);
+        //vector.applyMatrix4(transformationMatrixClone);
+        //console.log("Basis Vector clone", vector.clone());
+        //console.log("Basis Vector Origin", vectorOrigin.clone());
+        ////let temp = vector.clone()
+        ////vector.copy(vectorOrigin);
+        ////vectorOrigin.copy(temp);
+        //console.log("Changed Vector clone", vector.clone());
+        //console.log("Changed Vector Origin", vectorOrigin.clone());
+//
+        //vectorOrigin.applyMatrix4(inverseTransformationOrigin);
+        //vector.applyMatrix4(transformationMatrixClone);
+        //console.log("Origin Vector clone", vector.clone());
+        //console.log("Clone Vector Origin", vectorOrigin.clone());
+        console.log("Origin object", rootOriginalObject.clone());
+        console.log("Clone object", rootCloneObject.clone());
+        rootOriginalObject.applyMatrix(transformationMatrixOrigin);
+        rootCloneObject.applyMatrix(transformationMatrixClone);
         //rootCloneObject.position.applyMatrix4(transformationMatrix)
         //rootCloneObject.matrix.premultiply(originalMatrix);
         //rootCloneObject.matrix.premultiply(cloneMatrixInverse);
@@ -717,19 +806,42 @@ class Ragdoll extends IkObject
 
 
 
-        console.log("Translated object from original space", rootOriginalObject.clone());
-        //rootCloneObject.updateWorldMatrix(false, true);
-        console.log("Updated", rootOriginalObject.clone());
+        console.log("Translated Original object to basis space", rootOriginalObject.clone());
+        console.log("Translated clone object to basis space", rootCloneObject.clone());
+        ////rootCloneObject.updateWorldMatrix(false, true);
+        //console.log("Updated", rootOriginalObject.clone());
 
-        originalBone.position.copy(cloneBone.position.clone());
-        originalBone.rotation.copy(cloneBone.rotation.clone());
-        originalBone.updateMatrix();
-        rootOriginalObject.applyMatrix(inverseTransformation);
+        rootOriginalObject.matrix.copy(rootCloneObject.matrix);//
+        console.log("Copied clone object to original space", rootCloneObject.clone());
+        console.log("Copied original object to original space", rootOriginalObject.clone());
+        //rootOriginalObject.position.copy(rootCloneObject.position);
+        //rootOriginalObject.rotation.copy(rootCloneObject.rotation);
+        //originalBone.rotation.copy(cloneBone.rotation.clone());
+        //rootOriginalObject.updateMatrix();
+        //rootOriginalObject.updateMatrixWorld(true);
+        //rootOriginalObject.updateWorldMatrix(false, true);
+        let result = rootCloneObject.matrix.clone().premultiply(inverseTransformationOrigin);
+        let resulto = rootOriginalObject.matrix.clone().premultiply(inverseTransformationClone);
+        rootOriginalObject.applyMatrix(inverseTransformationOrigin);
+        rootCloneObject.applyMatrix(inverseTransformationClone);
         //rootCloneObject.position.applyMatrix4(inverseTransformation);
 
-        console.log("Inversed object to original space", rootOriginalObject.clone());
-        //rootCloneObject.updateWorldMatrix(false, true);
-        console.log("Finished Switching basis");
+        console.log("Inversed original object to clone space", rootOriginalObject.clone());
+        console.log("Inversed clone object to original space", rootCloneObject.clone());
+        console.log("clone result", result);
+        console.log("origin result", resulto);
+        ////rootCloneObject.updateWorldMatrix(false, true);
+        //console.log("Finished Switching basis");
+    }
+
+    createBasicMatrix()
+    {
+        let x = new THREE.Vector3(1,0,0);
+        let y = new THREE.Vector3(0,1,0);
+        let z = new THREE.Vector3(0,0,1);
+        let matrix = new THREE.Matrix4();
+        matrix.makeBasis(x, y, z);
+        return matrix;
     }
 
 }
