@@ -64,7 +64,6 @@ class App
         let loadedObject = {};
         const gltfLoader = new MyGLTFLoader();
         let moveX = 0;
-        let applyBinding = true;
         gltfLoader.loaded = (gltf) =>
         {
             //object.current, object.current.children[1]
@@ -75,10 +74,9 @@ class App
             object.updateMatrixWorld(true);
 
             loadedObject = new Ragdoll();
-            loadedObject.initObject(gltf.scene, object, object.children[1], applyBinding, backControl, leftHandControl,
+            loadedObject.initObject(gltf.scene, object, object.children[1], backControl, leftHandControl,
                                     rightHandControl, leftLegControl, rightLegControl,
                                     hipsControl);
-            applyBinding = false;
             this.iKObjects.push(loadedObject);
             let ragDollGui = new RagDollGui(loadedObject);
             //ragDollGui.initGui();
@@ -92,8 +90,7 @@ class App
             loadedObject.applyChangesToIK();
         }
         gltfLoader.loadToScene('./assets/adult-male.glb', scene);
-        //gltfLoader.loadToScene('./assets/adult-male.glb', scene);
-        //gltfLoader.loadToScene('./assets/male-adult-testforik.glb', scene);
+
         //#endregion
     }
 

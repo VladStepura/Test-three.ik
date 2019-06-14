@@ -29,7 +29,7 @@ class IkObject
     }
 
     // Takes skeleton and target for it's limbs
-    initObject(scene, objectSkeleton, skinnedMesh, applyBinding, ...controlTarget)
+    initObject(scene, objectSkeleton, skinnedMesh, ...controlTarget)
     {
         this.ik = new IK();
         let chains = [];
@@ -64,6 +64,8 @@ class IkObject
             // Searches only bones object
             if(object instanceof THREE.Bone)
             {
+                object.matrixAutoUpdate = false;
+                object.matrixWorldNeedsUpdate = false;
                 // Finds skeleton for skeletonHelper
                 if(skeleton === null)
                 {
@@ -81,30 +83,9 @@ class IkObject
                 if(object.name === "Hips")
                 {
                     this.hips = object;
-                    if(applyBinding === true)
-                    {
-
-
-
-                    }
                     setZDirecion(object, new THREE.Vector3(0, 0, 1));
 
                     rigMesh.bind(rigMesh.skeleton);
-                    //setZBack(object);
-                    //rigMesh.bind(rigMesh.skeleton);
-//
-                    //setZDirecion(this.originalObject.children[0], new THREE.Vector3(0, 0, 1));
-                    //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
-                    //setZBack(this.originalObject.children[0]);
-                    //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
-                    ////setZDirecion(this.originalObject, new THREE.Vector3(0, 0, 1));
-                    //this.originalObject.updateMatrixWorld(true);
-                    //rigMeshOriginal.bind(rigMeshOriginal.skeleton);
-                    ////setZBack(this.originalObject);
-                    //this.originalObject.updateMatrixWorld(true);
-                    ////rigMeshOriginal.bind(rigMeshOriginal.skeleton);
-
-                    //setReverseZ(object);
 
                     this.originalObject.children[1].bind(this.originalObject.children[1].skeleton);
                     object.updateWorldMatrix(true, true);
@@ -265,7 +246,7 @@ class IkObject
             let chain = chainObjects[i].chain;
             let jointBone = chain.joints[chain.joints.length - 1].bone;
             if(jointBone.name === "LeftFoot" || jointBone.name === "RightFoot" ||
-                jointBone.name === "LeftHand" || jointBone.name === "RightHand" ||
+                /*jointBone.name === "LeftHand" ||*/ jointBone.name === "RightHand" ||
                 jointBone.name === "Head" || jointBone.name === "Hips")
             {
                 let targetPosition = chainObjects[i].controlTarget.target.position;
@@ -347,22 +328,15 @@ class IkObject
             difference.y = cloneQuaternion.y - originalQuaternion.y;
             difference.z = cloneQuaternion.z - originalQuaternion.z;
             this.originalRotationDiffrenceOfBones.push(difference);
+
+            this.originalObjectMatrix[originBone.name] = originBone.matrix.clone();
+            this.cloneObjectMatrix[cloneBone.name] = cloneBone.matrix.clone();
         }
 /*        clonedHips.applyMatrix(matrix);
         clonedHips.updateMatrixWorld(true);*/
         originalBones[1].updateMatrix();
         clonedBones[1].updateMatrix();
         console.log(originalBones[1]);
-        this.originalObjectMatrix[originalBones[1].name] = originalBones[1].matrix.clone();
-        this.cloneObjectMatrix[originalBones[1].name] = clonedBones[1].matrix.clone();
-        this.originalObjectMatrix[originalBones[10].name] = originalBones[10].matrix.clone();
-        this.cloneObjectMatrix[originalBones[10].name] = clonedBones[10].matrix.clone();
-        this.originalObjectMatrix[originalBones[34].name] = originalBones[34].matrix.clone();
-        this.cloneObjectMatrix[originalBones[34].name] = clonedBones[34].matrix.clone();
-        this.originalObjectMatrix[originalBones[57].name] = originalBones[57].matrix.clone();
-        this.cloneObjectMatrix[originalBones[57].name] = clonedBones[57].matrix.clone();
-        this.originalObjectMatrix[originalBones[62].name] = originalBones[62].matrix.clone();
-        this.cloneObjectMatrix[originalBones[62].name] = clonedBones[62].matrix.clone();
     }
 
 }

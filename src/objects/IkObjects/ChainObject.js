@@ -25,5 +25,15 @@ class ChainObject
             joint.bone.updateMatrixWorld(true);
         }
     }
+
+    updateMatrixExceptRoot()
+    {
+        let joints = this.chain.joints;
+        for (let i = 1; i < joints.length; i++)
+        {
+            joints[i].bone.updateMatrixWorld(true);
+        }
+    }
+
 }
 export default ChainObject;
