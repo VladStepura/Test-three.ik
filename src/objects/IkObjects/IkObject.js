@@ -25,7 +25,7 @@ class IkObject
 
         this.originalObjectMatrix = {};
         this.cloneObjectMatrix = {};
-
+        this.startAxisAngle = {};
     }
 
     // Takes skeleton and target for it's limbs
@@ -190,6 +190,7 @@ class IkObject
             if(IK.firstRun)
             {
                 this.recalculateDifference();
+                this.initializeAxisAngle();
             }
             this.lateUpdate();
         }
@@ -246,7 +247,7 @@ class IkObject
             let chain = chainObjects[i].chain;
             let jointBone = chain.joints[chain.joints.length - 1].bone;
             if(jointBone.name === "LeftFoot" || jointBone.name === "RightFoot" ||
-                /*jointBone.name === "LeftHand" ||*/ jointBone.name === "RightHand" ||
+                jointBone.name === "LeftHand" || jointBone.name === "RightHand" ||
                 jointBone.name === "Head" || jointBone.name === "Hips")
             {
                 let targetPosition = chainObjects[i].controlTarget.target.position;
@@ -337,6 +338,29 @@ class IkObject
         originalBones[1].updateMatrix();
         clonedBones[1].updateMatrix();
         console.log(originalBones[1]);
+    }
+
+    initializeAxisAngle()
+    {
+        let clonedSkin = this.clonedObject.children[1];
+        let originalSkin = this.originalObject.children[1];
+        let clonedBones = clonedSkin.skeleton.bones;
+        let originalBones = originalSkin.skeleton.bones;
+        for (let i = 0; i < clonedBones.length; i++)
+        {
+            let cloneBone = clonedBones[i];
+            let originalBone = originalBones[i];
+            let deltaQuat = new THREE.Quaternion();
+            deltaQuat.multiply(cloneBone.quaternion.clone().conjugate());
+            deltaQuat.multiply(originalBone.quaternion);
+            this.startAxisAngle[cloneBone.name] = {};
+            this.startAxisAngle[cloneBone.name].clonedAxis = cloneBone.quaternion.toAngleAxis();
+            this.startAxisAngle[originalBone.name].originalAxis = originalBone.quaternion.toAngleAxis();
+            this.startAxisAngle[originalBone.name].cloneQuat = cloneBone.quaternion.clone();
+            this.startAxisAngle[originalBone.name].originQuat = originalBone.quaternion.clone();
+            this.startAxisAngle[originalBone.name].deltaQuat = deltaQuat;
+        }
+
     }
 
 }
