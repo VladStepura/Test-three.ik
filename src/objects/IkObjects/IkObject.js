@@ -3,6 +3,7 @@ import * as THREE from "three";
 import {setZDirecion, setReverseZ, setZBack} from "../../utils/axisUtils";
 import ChainObject from "./ChainObject";
 import SkeletonUtils from "../../utils/SkeletonUtils";
+import "../../utils/Object3dExtension";
 
 // IKObject is class which applies ik onto skeleton
 class IkObject
@@ -353,14 +354,18 @@ class IkObject
             let deltaQuat = new THREE.Quaternion();
             deltaQuat.multiply(cloneBone.quaternion.clone().conjugate());
             deltaQuat.multiply(originalBone.quaternion);
+            let globalDeltaQuat = new THREE.Quaternion();
+            globalDeltaQuat.multiply(cloneBone.worldQuaternion().clone().conjugate());
+            globalDeltaQuat.multiply(originalBone.worldQuaternion());
+
             this.startAxisAngle[cloneBone.name] = {};
             this.startAxisAngle[cloneBone.name].clonedAxis = cloneBone.quaternion.toAngleAxis();
             this.startAxisAngle[originalBone.name].originalAxis = originalBone.quaternion.toAngleAxis();
             this.startAxisAngle[originalBone.name].cloneQuat = cloneBone.quaternion.clone();
             this.startAxisAngle[originalBone.name].originQuat = originalBone.quaternion.clone();
             this.startAxisAngle[originalBone.name].deltaQuat = deltaQuat;
+            this.startAxisAngle[originalBone.name].globaldeltaQuat = globalDeltaQuat;
         }
-
     }
 
 }
