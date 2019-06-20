@@ -81,13 +81,16 @@ class App
             let ragDollGui = new RagDollGui(loadedObject);
             //ragDollGui.initGui();
             console.log(gltf.scene);
+            console.log(loadedObject);
+            loadedObject.chainObjects[1].chain.joints[0].bone.rotateX(Math.PI/2);
             //let scale = 20;
-            //gltf.scene.children[0].children[0].rotation.set(0, 0, 0);
+            //gltf.scene.children[0].children[0].scale.set(scale, scale, scale);
             //gltf.scene.children[0].children[1].rotation.set(0, 0, 0);
             //gltf.scene.children[0].updateMatrixWorld()
-            //gltf.scene.children[0].rotateZ(180);
+           // gltf.scene.children[0].rotateZ(180);
             loadedObject.reinitialize();
-            loadedObject.applyChangesToIK();
+
+            //loadedObject.applyToIk();
         }
         gltfLoader.loadToScene('./assets/adult-male.glb', scene);
 

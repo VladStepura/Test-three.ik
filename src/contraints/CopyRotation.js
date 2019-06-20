@@ -32,7 +32,9 @@ class CopyRotation extends IkConstraint
         }
 
         joint._setDirection(direction);
+
         this.applyInfluenceToJoint(joint);
+        console.log("Applied constraint");
     }
 }
 export default CopyRotation;

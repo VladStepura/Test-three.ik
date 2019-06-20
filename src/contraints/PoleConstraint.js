@@ -82,11 +82,11 @@ class PoleConstraint extends IkConstraint
         // Sets bone direction
         joint._setDirection(direction);
 
-        for (let i = 0; i < length; i++)
-        {
-            let influenceJoint = joints[i];
-            this.applyInfluenceToJoint(influenceJoint);
-        }
+        //for (let i = 0; i < length; i++)
+        //{
+        //    let influenceJoint = joints[i];
+        //    this.applyInfluenceToJoint(influenceJoint);
+        //}
 
     }
 

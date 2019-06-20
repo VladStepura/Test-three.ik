@@ -25,7 +25,7 @@ class Ragdoll extends IkObject
 
         // Adds events to Back control
         this.applyEventsToBackControl(this.controlTargets[0].control);
-
+        console.log(skinnedMesh);
         let backChain = this.ik.chains[0];
         let leftArmChain = this.ik.chains[1];
         let rightArmChain = this.ik.chains[2];
@@ -55,7 +55,7 @@ class Ragdoll extends IkObject
         let copyRotation = new CopyRotation(backChain, backChain.joints[4]);
         copyRotation.influence = 50;
         backChain.joints[3].addIkConstraint(copyRotation);
-
+        console.log(backChain);
         this.poleConstraints[0].poleAngle = 128;
         this.poleConstraints[0].chainLength = 6;
         this.poleConstraints[1].testing = true;
@@ -109,46 +109,30 @@ class Ragdoll extends IkObject
         let hipsControl = this.hipsControlTarget.control;
         let hipsTarget = this.hipsControlTarget.target;
 
-        let backConstraint = this.poleConstraints[0].poleTarget.mesh.position;
-        let leftArmConstraint = this.poleConstraints[1].poleTarget.mesh.position;
-        let rightArmConstraint = this.poleConstraints[2].poleTarget.mesh.position;
-        let leftLegConstraint = this.poleConstraints[3].poleTarget.mesh.position;
-        let rightLegConstraint = this.poleConstraints[4].poleTarget.mesh.position;
-
+        let poleConstraints = this.poleConstraints;
         hipsControl.addEventListener("mouseDown", (event) =>
         {
+            for (let poleConstraint of poleConstraints)
+            {
+                let constraint = poleConstraint.poleTarget.mesh.position;
+                let name = poleConstraint.poleTarget.mesh.name;
+                console.log(name);
+                this.poleTargetOffsets[name] = constraint.clone().sub(hipsTarget.position);
+            }
             this.hipsMouseDown = true;
-
-            this.poleTargetOffsets.back = backConstraint.clone().sub(hipsTarget.position);
-            this.poleTargetOffsets.leftArm = leftArmConstraint.clone().sub(hipsTarget.position);
-            this.poleTargetOffsets.rightArm = rightArmConstraint.clone().sub(hipsTarget.position);
-            this.poleTargetOffsets.leftLeg = leftLegConstraint.clone().sub(hipsTarget.position);
-            this.poleTargetOffsets.rightLeg = rightLegConstraint.clone().sub(hipsTarget.position);
-
         });
         hipsControl.addEventListener("change", (event) =>
         {
             if(this.hipsMouseDown)
             {
-                let hipsPosition = hipsTarget.position.clone();
-                hipsPosition.add(this.poleTargetOffsets.back);
-                backConstraint.copy(hipsPosition);
-
-                hipsPosition = hipsTarget.position.clone();
-                hipsPosition.add(this.poleTargetOffsets.leftArm);
-                leftArmConstraint.copy(hipsPosition);
-
-                hipsPosition = hipsTarget.position.clone();
-                hipsPosition.add(this.poleTargetOffsets.rightArm);
-                rightArmConstraint.copy(hipsPosition);
-
-                hipsPosition = hipsTarget.position.clone();
-                hipsPosition.add(this.poleTargetOffsets.leftLeg);
-                leftLegConstraint.copy(hipsPosition);
-
-                hipsPosition = hipsTarget.position.clone();
-                hipsPosition.add(this.poleTargetOffsets.rightLeg);
-                rightLegConstraint.copy(hipsPosition);
+                for (let poleConstraint of poleConstraints)
+                {
+                    let constraint = poleConstraint.poleTarget.mesh.position;
+                    let poleTargetOffset = this.poleTargetOffsets[poleConstraint.poleTarget.mesh.name];
+                    let hipsPosition = hipsTarget.position.clone();
+                    hipsPosition.add(poleTargetOffset);
+                    constraint.copy(hipsPosition);
+                }
 
                 this.originalObject.position.copy(this.clonedObject.position);
             }
@@ -193,6 +177,7 @@ class Ragdoll extends IkObject
         }
         else
         {
+            //this.lateUpdate();
             this.applyChangesToOriginal();
         }
     }
@@ -202,8 +187,8 @@ class Ragdoll extends IkObject
         this.legsFollowTargetRotation();
         super.lateUpdate();
         this.applyHeadRotation();
-    }
 
+    }
     // Follows moving target rotation which applied to feet
     // Default position is facing flat to Earth
     legsFollowTargetRotation()
@@ -212,12 +197,29 @@ class Ragdoll extends IkObject
         let rightFootBone = this.ik.chains[4].joints[2].bone;
         let rightLegChainTarget = this.chainObjects[4].controlTarget.target;
         rightFootBone.rotation.copy(rightLegChainTarget.rotation);
-        this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(1.5, 0, 0));
+        this.rotateBoneQuaternion(rightFootBone, new THREE.Euler(0.5, 0, 0));
+        rightFootBone.updateMatrix();
         // Makes left foot follow the rotation of target
         let leftFootBone = this.ik.chains[3].joints[2].bone;
         let leftLegChainTarget = this.chainObjects[3].controlTarget.target;
         leftFootBone.rotation.copy(leftLegChainTarget.rotation);
-        this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(1.5, 0, 0));
+        this.rotateBoneQuaternion(leftFootBone, new THREE.Euler(0.5, 0, 0));
+        leftFootBone.updateMatrix();
+    }
+
+    // Applies neck rotation and applies head rotation that head stay upward
+    applyHeadRotation()
+    {
+        let spine = this.chainObjects[0].chain.joints[0].bone;
+        let neck = this.chainObjects[0].chain.joints[3].bone;
+        //neck.rotation.x = -spine.rotation.x * 0.5;
+        neck.rotation.y = -spine.rotation.y * 0.5;
+        neck.updateMatrix();
+        neck.updateMatrixWorld(true);
+        let head = this.chainObjects[0].chain.joints[4].bone;
+
+        this.rotateBoneQuaternion(head, new THREE.Euler(-1.0, 0, 0));
+        head.updateMatrix();
     }
 
      // Sets and quaternion angle for bones
@@ -273,7 +275,8 @@ class Ragdoll extends IkObject
         console.log(this.clonedObject);
         this.hips.getWorldPosition(this.hipsControlTarget.target.position);
         this.calculteBackOffset();
-        //this.recalculateDifference();
+        this.applyToIk();
+        //
     }
 
     // Resets targets position
@@ -293,13 +296,6 @@ class Ragdoll extends IkObject
             constraint.poleTarget.mesh.position.set(targetPosition.x + poleOffset.x, targetPosition.y + poleOffset.y, targetPosition.z + poleOffset.z);
         }
 
-    }
-
-    // Applies neck rotation and applies head rotation that head stay upward
-    applyHeadRotation()
-    {
-        let head = this.chainObjects[0].chain.joints[4].bone;
-        this.rotateBoneQuaternion(head, new THREE.Euler(-1, 0, 0));
     }
 
     removeFromScene(scene)
@@ -339,181 +335,34 @@ class Ragdoll extends IkObject
             {
                 continue;
             }
-            let difference = this.originalRotationDiffrenceOfBones[i];
-            let current = new THREE.Euler(  cloneBone.rotation.x - originalBone.rotation.x,
-                                            cloneBone.rotation.y - originalBone.rotation.y,
-                                            cloneBone.rotation.z - originalBone.rotation.z)
-
-            let newAngle = new THREE.Euler( difference.x - current.x,
-                                            difference.y - current.y,
-                                            difference.z - current.z);
-
-            let newOrigin = new THREE.Euler(originalBone.rotation.x - newAngle.x,
-                                            originalBone.rotation.y - newAngle.y,
-                                            originalBone.rotation.z - newAngle.z)
-            if(//chainObjects[3].chain.joints.some(joint => joint.bone.name === cloneBone.name))
-                //cloneBone.name === "LeftUpLeg" ) //||// cloneBone.name === "RightUpLeg" ||
-                cloneBone.name === "LeftArm"  ||//)//|| cloneBone.name === "RightArm" ||
-                cloneBone.name === "Spine" )
-            {
-                //this.basisSwitchin(originalBone, cloneBone);
-                //this.fromGlobalToLocal(cloneBone, originalBone);
-           //
-            }
-            this.fromGlobalToLocal(cloneBone, originalBone);
-            //this.basisSwitchin(originalBone, cloneBone);
+            this.cloneToOriginRotation(cloneBone, originalBone);
         }
-        this.recalculateDifference();
         //this.initializeAxisAngle();
-        //this.cloneObjectMatrix[originalBones[10].name] = clonedBones[10].matrix.clone();
     }
 
-    applyChangesToIK()
+    applyToIk()
     {
-        this.isEnabledIk = false;
         let clonedSkin = this.clonedObject.children[1];
         let originalSkin = this.originalObject.children[1];
         let clonedBones = clonedSkin.skeleton.bones;
         let originalBones = originalSkin.skeleton.bones;
-        let chainObjects = this.chainObjects;
-
-        let originalHips = originalBones[0];
-        let clonedHips = clonedBones[0];
-        let matrix = originalHips.matrixWorld.clone();
-        let inverseMatrix = new THREE.Matrix4().getInverse(matrix);
-
-        let transformationMatrix = new THREE.Matrix4();
-        let cloneMatrix     = new THREE.Matrix4();
-        let originalMatrix  = new THREE.Matrix4();
-        let cloneMatrixInverse     = new THREE.Matrix4();
-        let originalMatrixInverse  = new THREE.Matrix4();
-        //transformationMatrix.multiply(cloneMatrix.clone());
-        //transformationMatrix.multiply(originalMatrixInverse.clone());
-        let inverseTransformation = new THREE.Matrix4();
-        let rootCloneObject = null;
-        //console.log("object in clone space", cloneObject.clone());
-        let rootOriginalObject = null;
-
-        for (let i = 0; i < clonedBones.length; i++)
+        console.log("Applying IK");
+        for (let i = 1; i < clonedBones.length; i++)
         {
             let cloneBone = clonedBones[i];
             let originalBone = originalBones[i];
-            let prevRotation =  this.prevRotation[originalBone.name];
             if(!this.ikBonesName.some((boneName) => originalBone.name === boneName || boneName === "Hips"))
             {
                 continue;
             }
-            let differenceRotation = this.originalRotationDiffrenceOfBones[i];
-
-            let current = new THREE.Euler(cloneBone.rotation.x - originalBone.rotation.x,
-                                          cloneBone.rotation.y - originalBone.rotation.y,
-                                          cloneBone.rotation.z - originalBone.rotation.z)
-            let newAngle = new THREE.Euler(differenceRotation.x - current.x,
-                                           differenceRotation.y - current.y,
-                                           differenceRotation.z - current.z);
-            let newClone = new THREE.Euler(cloneBone.rotation.x + newAngle.x,
-                                           cloneBone.rotation.y + newAngle.y,
-                                           cloneBone.rotation.z + newAngle.z);
-
-           /* if(this.chainContainsBone(chainObjects[0].chain, originalBone))
-            {
-                let joints = chainObjects[0].chain.joints;
-                if(originalBone.name === joints[0].bone.name)
-                {
-                    cloneMatrix = cloneBone.matrix;
-                    originalMatrix = originalBone.matrix;
-                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
-                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
-                    transformationMatrix = new THREE.Matrix4();
-                    transformationMatrix.multiply(originalMatrix.clone());
-                    transformationMatrix.multiply(cloneMatrixInverse.clone());
-
-                    inverseTransformation.getInverse(transformationMatrix.clone());
-
-                    rootCloneObject = cloneBone;
-                    rootOriginalObject = originalBone;
-                    rootCloneObject.applyMatrix(transformationMatrix);
-                    rootCloneObject.updateWorldMatrix(false, true);
-                }
-                originalBone.rotation.copy(cloneBone.rotation);
-                if(originalBone.name === joints[joints.length-1].bone.name)
-                {
-                    rootCloneObject.applyMatrix(inverseTransformation);
-                    rootCloneObject.updateWorldMatrix(false, true);
-                }
-            }
-            else if(this.chainContainsBone(chainObjects[3].chain, originalBone) ||
-                this.chainContainsBone(chainObjects[4].chain, originalBone) )
-            {
-                //let yRotation = prevRotation === undefined ? newOrigin.y : prevRotation.rotation.y;
-                //originalBone.rotation.set(newOrigin.x, newOrigin.y, newOrigin.z);
-
-                if(originalBone.name === "LeftUpLeg" || originalBone.name === "RightUpLeg")
-                {
-                    cloneMatrix = cloneBone.matrix.clone();
-                    originalMatrix = originalBone.matrix.clone();
-                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
-                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
-                    transformationMatrix = new THREE.Matrix4();
-                    transformationMatrix.multiply(originalMatrix);
-                    transformationMatrix.multiply(cloneMatrixInverse);
-
-                    inverseTransformation.getInverse(transformationMatrix.clone());
-
-                    rootCloneObject = cloneBone;
-                    rootOriginalObject = originalBone;
-                    rootCloneObject.applyMatrix(transformationMatrix);
-                    //console.log("Translated object from original space", rootCloneObject.clone());
-                    rootCloneObject.updateWorldMatrix(false, true);
-                    //console.log("Translated object from original space", rootCloneObject.clone());
-                }
-                originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
-                if(originalBone.name === "LeftFoot" || originalBone.name === "RightFoot")
-                {
-                    //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
-                    rootCloneObject.applyMatrix(inverseTransformation);
-                    //console.log("Inversed object to original space", rootOriginalObject.clone());
-                    rootCloneObject.updateWorldMatrix(false, true);
-                }
-            }
-            else if(this.chainContainsBone(chainObjects[1].chain, originalBone) ||
-                this.chainContainsBone(chainObjects[2].chain, originalBone))
-            {
-                if(originalBone.name === "LeftArm" )
-                {
-                    //this.basisSwitchin(originalBone, cloneBone);
-                }
-
-                let joints = chainObjects[0].chain.joints;
-                if(originalBone.name === "LeftArm" || originalBone.name === "RightArm")
-                {
-                    cloneMatrix = cloneBone.matrix.clone();
-                    originalMatrix = originalBone.matrix.clone();
-                    cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
-                    originalMatrixInverse = new THREE.Matrix4().getInverse(originalMatrix);
-                    transformationMatrix = new THREE.Matrix4();
-                    transformationMatrix.multiply(originalMatrix);
-                    transformationMatrix.multiply(cloneMatrixInverse);
-
-                    inverseTransformation.getInverse(transformationMatrix.clone());
-
-                    rootCloneObject = cloneBone;
-                    rootOriginalObject = originalBone;
-                    rootCloneObject.applyMatrix(transformationMatrix);
-                    //console.log("Translated object from original space", rootCloneObject.clone());
-                    rootCloneObject.updateWorldMatrix(false, true);
-                    //console.log("Translated object from original space", rootCloneObject.clone());
-                }
-                originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
-                if(originalBone.name === "LeftHand" || originalBone.name === "RightHand")
-                {
-                    //originalBone.rotation.set(cloneBone.rotation.x, cloneBone.rotation.y, cloneBone.rotation.z);
-                    rootCloneObject.applyMatrix(inverseTransformation);
-                    //console.log("Inversed object to original space", rootOriginalObject.clone());
-                    rootCloneObject.updateWorldMatrix(false, true);
-                }
-            }*/
+            //this.basisSwitchinBack(originalBone, cloneBone);
+            this.originToCloneRotation(cloneBone, originalBone);
+            //cloneBone.quaternion.copy(originalBone.quaternion);
+            //cloneBone.position.copy(originalBone.position);
+            //cloneBone.updateMatrix();
+            //
         }
+        this.initializeAxisAngle();
     }
 
     moveRagdoll()
@@ -522,223 +371,28 @@ class Ragdoll extends IkObject
         this.clonedObject.updateMatrixWorld(true, true);
     }
 
-    chainContainsBone(chain, bone)
+    basisSwitchinBack(originalBone, cloneBone)
     {
-        if(chain.joints.some((joint) => joint.bone.name === bone.name  ))
-        {
-            return true;
-        }
-        return false;
-    }
-
-    createMatrixFromBasis(matrix)
-    {
-        let x = new THREE.Vector3();
-        let y = new THREE.Quaternion();
-        let z = new THREE.Vector3();
-        let newMatrix = new THREE.Matrix4();
-        matrix.decompose(x, y, z);
-        console.log("Position", x);
-        console.log("Rotation", y);
-        console.log("Scale", z);
-        newMatrix.setPosition(x);
-        return newMatrix;
-    }
-
-
-    basisSwitchin(originalBone, cloneBone) {
-        //console.log("Switching basis of ", originalBone.name );
-        let basicMatrix = this.createBasicMatrix();
-        let basicMatrixInverse = new THREE.Matrix4().getInverse(basicMatrix);
-        let tMatrixFromOriginToClone = new THREE.Matrix4();
-        let tMatrixFromCloneToOrigin = new THREE.Matrix4();
-        let cloneMatrix = new THREE.Matrix4();
-        let originalPrevMatrix = new THREE.Matrix4();
-        let originalCurrentMatrix = new THREE.Matrix4();
-        let basixMatrixInverse = new THREE.Matrix4();
-        let cloneMatrixInverse = new THREE.Matrix4();
-        let originalMatrixInverse = new THREE.Matrix4();
-        //transformationMatrix.multiply(cloneMatrix.clone());
-        //transformationMatrix.multiply(originalMatrixInverse.clone());
-        let inverseTransformationOrigin = new THREE.Matrix4();
-        let inverseTransformationClone = new THREE.Matrix4();
-        let rootCloneObject = null;
-        //console.log("object in clone space", cloneObject.clone());
-        let rootOriginalObject = null;
-        let vector = new THREE.Vector3(this.vectorPos, 0, 0);
-        let vectorOrigin = new THREE.Vector3(this.vectorPos, 0, 0);
-
         cloneBone.updateMatrix();
         originalBone.updateMatrix();
-        cloneMatrix = cloneBone.matrix.clone();
-        originalPrevMatrix = this.originalObjectMatrix[originalBone.name].clone()
-        originalCurrentMatrix = originalBone.matrix.clone();
         cloneBone.updateMatrixWorld(true);
         originalBone.updateMatrixWorld(true);
-        let worldCloneMatrix = cloneBone.matrixWorld.clone();
-        let worldOriginalMatrix = originalBone.matrixWorld.clone();
 
-        let inverseWorldOriginalMatrix = new THREE.Matrix4().getInverse(worldOriginalMatrix);
-        let inverseWorldCloneMatrix = new THREE.Matrix4().getInverse(worldCloneMatrix);
-
-        ///vector.applyMatrix4(cloneMatrix);
-        ///vectorOrigin.applyMatrix4(originalPrevMatrix);
-        cloneMatrixInverse = new THREE.Matrix4().getInverse(cloneMatrix);
-        originalMatrixInverse = new THREE.Matrix4().getInverse(originalCurrentMatrix);
-
+        let originalPrevMatrix = this.originalObjectMatrix[originalBone.name].clone();
+        let originalCurrentMatrix = originalBone.matrix.clone();
         let clonePrevMatrix = this.cloneObjectMatrix[cloneBone.name].clone();
         let cloneCurrentMatrix = cloneBone.matrix.clone();
         let cloneInversePrevMatrix = new THREE.Matrix4().getInverse(clonePrevMatrix);
-        let cloneInverseCurrentMatrix = new THREE.Matrix4().getInverse(cloneCurrentMatrix);
-
         let tMatrixPrevClone = new THREE.Matrix4();
-        let tMatrixCurrentClone = new THREE.Matrix4();
-        let tMatrixPreOrigin = new THREE.Matrix4();
-
-
-        tMatrixPreOrigin.multiply(basicMatrix);
-        tMatrixPreOrigin.multiply(originalMatrixInverse);
 
         tMatrixPrevClone.multiply(originalCurrentMatrix);
         tMatrixPrevClone.multiply(cloneInversePrevMatrix);
 
-        tMatrixCurrentClone.multiply(originalPrevMatrix);
-        tMatrixCurrentClone.multiply(cloneInverseCurrentMatrix);
-
-        let inverseTMatrixPreClone = new THREE.Matrix4().getInverse(tMatrixPrevClone);
-
-        //tMatrixPrevClone = this.createTransformationalMatrixFromPos(originalCurrentMatrix, cloneInversePrevMatrix);
-        // let rotationMatrix = this.subMatrixRotation(clonePrevMatrix, cloneCurrentMatrix);
-
-        //rotationMatrix.premultiply(tMatrixCurrentClone);
-        //let transformation = new THREE.Matrix4().multiplyMatrices(originalCurrentMatrix, inverseWorldCloneMatrix);
-        //console.log("Projection");
-        console.log("Clone", clonePrevMatrix.getRotation().substract(cloneCurrentMatrix.getRotation()));
-        //console.log("Clone Current matrix", );
         clonePrevMatrix.premultiply(tMatrixPrevClone);
         cloneCurrentMatrix.premultiply(tMatrixPrevClone);
-        console.log("Changed Clone", clonePrevMatrix.getRotation().substract(cloneCurrentMatrix.getRotation()));
-       // console.log("Changed Clone Current matrix", cloneCurrentMatrix.getRotation());
-        //this.showMatrixComponents( cloneCurrentMatrix, "CLone projected onto basic");
-        //cloneCurrentMatrix.premultiply(originalCurrentMatrix)
-        //originalCurrentMatrix.premultiply(tMatrixPreOrigin);
-        //this.showMatrixComponents( originalCurrentMatrix, "original projected onto basic");
-        //console.log("Projection");
 
-        //cloneMatrixWorld.premultiply(inverseWorldCloneMatrix);
-        //cloneMatrixWorld.premultiply(originalCurrentMatrix);
-        //originalBone.premultiply(originalMatrixInverse);
-        let changedRotationMatrix = this.subMatrixRotation(clonePrevMatrix, cloneCurrentMatrix);
-        //console.log("Switching");
-        //this.showMatrixComponents( rotationMatrix, "rotationMatrix");
-        // this.showMatrixComponents( changedRotationMatrix, "changedRotationMatrix");
-        //this.showMatrixComponents( clonePrevMatrix, "PrevCloneMatrix");
-        ////this.showMatrixComponents( cloneMatrixWorld, "CloneWorldMatrix");
-        //this.showMatrixComponents( originalPrevMatrix, "OriginalWorldMatrix");
-        //this.showMatrixComponents( originalCurrentMatrix, "OriginalMatrix");
-        //this.showMatrixComponents( cloneCurrentMatrix, "CurrentCloneMatrix");
-        //this.showMatrixComponents( originalPrevMatrix, "OriginalPrevMatrix");
-        //this.showMatrixComponents( originalCurrentMatrix, "OriginalCurrentMatrix");
-        //console.log("Switched");
         this.setObjectFromMatrixElements(cloneCurrentMatrix, originalBone);
 
-        let cloneMatrixWorld = cloneBone.matrix.clone();
-        let originMatrixWorld = originalBone.matrix.clone();
-        let cloneWorldQuaternion = new THREE.Quaternion();
-        let originWorldQuaternion = new THREE.Quaternion();
-        cloneBone.getWorldQuaternion(cloneWorldQuaternion);
-        originalBone.getWorldQuaternion(originWorldQuaternion);
-        cloneWorldQuaternion = cloneBone.quaternion.clone();
-        originWorldQuaternion = originalBone.quaternion.clone();
-        let oldCloneToOrigin = this.startAxisAngle[cloneBone.name].cloneQuat.clone();
-
-        let oldDelta = this.startAxisAngle[cloneBone.name].deltaQuat.clone();
-        //let newDelta = new THREE.Quaternion();
-       // newDelta.multiply(this.startAxisAngle[cloneBone.name].cloneQuat.clone().conjugate());
-       // newDelta.multiply(originWorldQuaternion);
-        //let oldToOld = oldCloneToOrigin.clone();
-        //let oldToNew = oldCloneToOrigin.clone();
-        //oldToOld.multiply(oldDelta);
-        //oldToNew.multiply(newDelta);
-        //oldCloneToOrigin.multiply();
-        //let cloneQuat = cloneWorldQuaternion.clone();
-        // this.startAxisAngle[originalBone.name].cloneQuat = new THREE.Quaternion().set(cloneQuat.x, cloneQuat.y, cloneQuat.z, cloneQuat.w);
-        //let relativeToOld = cloneWorldQuaternion.clone().multiply(oldDelta);
-        //let relativeToNew = cloneWorldQuaternion.clone().multiply(newDelta);
-        cloneWorldQuaternion.multiply(oldDelta);
-        //console.log("new relative to old", relativeToOld);
-        //console.log("new relative to new", relativeToNew);
-        //console.log("old to old", oldToOld);
-        //console.log("old to new", oldToNew);
-        //let axis = this.showAxisAngleOfBone(cloneBone, "clone");
-
-       // let worldCloneQuat = cloneBone.localToWorldQuaternion(cloneBone.quaternion);
-        //let localToOriginQuat = originalBone.worldToLocalQuaternion(cloneWorldQuaternion);
-
-        //this.showAxisAngleOfBone(originalBone, "original");
-        //originalBone.quaternion.copy(cloneWorldQuaternion);
-
-    }
-
-    createBasicMatrix()
-    {
-        let x = new THREE.Vector3(1,0,0);
-        let y = new THREE.Vector3(0,1,0);
-        let z = new THREE.Vector3(0,0,1);
-        let matrix = new THREE.Matrix4();
-        matrix.makeBasis(x, y, z);
-        return matrix;
-    }
-
-    showMatrixComponents(matrix, name)
-    {
-        let position = new THREE.Vector3();
-        let rotation = new THREE.Quaternion();
-        let scale = new THREE.Vector3();
-        matrix.decompose(position, rotation, scale);
-        let euler = new THREE.Euler().setFromQuaternion(rotation);
-        console.log(name);
-        console.log("Position ", position);
-        console.log("Rotation ", euler);
-        //console.log("Scale ", scale);
-        return rotation;
-    }
-
-    subMatrixRotation(prevMatrix, currentMatrix)
-    {
-        let prevPosition = new THREE.Vector3();
-        let prevRotation = new THREE.Quaternion();
-        let prevScale = new THREE.Vector3();
-        prevMatrix.decompose(prevPosition, prevRotation, prevScale);
-        let currentPosition = new THREE.Vector3();
-        let currentRotation = new THREE.Quaternion();
-        let currentScale = new THREE.Vector3();
-        currentMatrix.decompose(currentPosition, currentRotation, currentScale);
-
-        let prevEuler = new THREE.Euler().setFromQuaternion(prevRotation);
-        let currentEuler = new THREE.Euler().setFromQuaternion(currentRotation);
-        let result = new THREE.Euler();
-        result.x = prevEuler.x - currentEuler.x;
-        result.y = prevEuler.y - currentEuler.y;
-        result.z = prevEuler.z - currentEuler.z;
-        let rotation = new THREE.Quaternion().setFromEuler(result);
-       // let rotationalDifMatrix = new THREE.Matrix4().compose(currentPosition, rotation, currentScale);
-        return result;
-    }
-
-    fromGlobalToLocal(cloneBone, originBone)
-    {
-        let cloneGlobalQuat = cloneBone.worldQuaternion();
-        let cloneLocalQuat = cloneBone.quaternion.clone();
-        let originGlobalQuate = originBone.worldQuaternion();
-        let originLocalQuate = cloneBone.quaternion.clone();
-        cloneGlobalQuat.multiply(this.startAxisAngle[cloneBone.name].globaldeltaQuat);
-        let transformMatrix = new THREE.Matrix4();
-        transformMatrix.multiply(originBone.matrix);
-        transformMatrix.multiply(originBone.getInverseMatrixWorld());
-        cloneGlobalQuat.applyMatrix(transformMatrix);
-        originBone.quaternion.copy(cloneGlobalQuat);
-        //console.log("Changed global quat", cloneGlobalQuat);
     }
 
     setObjectFromMatrixElements(matrix, object)
@@ -747,97 +401,37 @@ class Ragdoll extends IkObject
         let rotation = new THREE.Quaternion();
         let scale = new THREE.Vector3();
         matrix.decompose(position, rotation, scale);
-        let quatVec1 = object.quaternion.toAngleAxis();
         let euler = new THREE.Euler().setFromQuaternion(rotation);
-
-
-
-        let quatVec2 = rotation.toAngleAxis();
-
-        let axis = quatVec1.axis.sub(quatVec2.axis);
-        let angle = quatVec1.angle - quatVec2.angle;
-        console.log("Set object");
-        console.log("object quaternion", object.quaternion.clone());
-        console.log("Rotation", rotation);
-        //object.rotateOnAxis(axis, angle)
+        //object.rotation.set(euler.x, euler.y, euler.z);
         object.position.copy(position);
         object.quaternion.copy(rotation);
-        //object.rotateX(Math.PI/2);
-        //object.rotation.x = euler.x;
-        //object.rotation.y = euler.y + additional.y;
-        //object.rotation.z = euler.z + additional.z;
-        //object.quaternion.copy(rotation);
-        //object.scale.copy(scale);
         object.updateMatrix();
     }
 
-    createTransformationalMatrixFromPos(originalMatrix, inverseClone)
+    cloneToOriginRotation(cloneBone, originBone)
     {
-        let rotation = new THREE.Quaternion();
-        let prevPosition = new THREE.Vector3();
-        let prevRotation = new THREE.Quaternion();
-        let prevScale = new THREE.Vector3();
-        originalMatrix.decompose(prevPosition, prevRotation, prevScale);
-        let currentPosition = new THREE.Vector3();
-        let currentRotation = new THREE.Quaternion();
-        let currentScale = new THREE.Vector3();
-        inverseClone.decompose(currentPosition, currentRotation, currentScale);
-        let originTranslationMatrix = new THREE.Matrix4().compose(prevPosition, rotation, prevScale);
-        let inverseCloneTranslationMatrix = new THREE.Matrix4().compose(currentPosition, rotation, currentScale);
-        let result = new THREE.Matrix4().multiplyMatrices(originTranslationMatrix, inverseCloneTranslationMatrix);
-        return result;
+        let cloneGlobalQuat = cloneBone.worldQuaternion();
+        cloneGlobalQuat.multiply(this.bonesDelta[cloneBone.name].cloneToOriginDelta);
+        let transformMatrix = new THREE.Matrix4();
+        transformMatrix.multiply(originBone.matrix);
+        transformMatrix.multiply(originBone.getInverseMatrixWorld());
+        cloneGlobalQuat.applyMatrix(transformMatrix);
+        originBone.quaternion.copy(cloneGlobalQuat);
+        //originBone.updateMatrix();
     }
 
-    quaternionDifference(cloneBone, originalBone)
-    {
-        let from = cloneBone;
-        let to = originalBone;
-        let delta = to.clone().multiply(from.clone().inverse());
-        let result = delta.clone().multiply(to);
-        let euler = new THREE.Euler().setFromQuaternion(delta);
-        //console.log("Result", euler);
-        return result;
 
+    originToCloneRotation(cloneBone, originBone)
+    {
+        let originalGlobalQuat = originBone.worldQuaternion();
+        originalGlobalQuat.multiply(this.bonesDelta[originBone.name].originToCloneDelta);
+        let transformMatrix = new THREE.Matrix4();
+        transformMatrix.multiply(cloneBone.matrix);
+        transformMatrix.multiply(cloneBone.getInverseMatrixWorld());
+        originalGlobalQuat.applyMatrix(transformMatrix);
+        cloneBone.quaternion.copy(originalGlobalQuat);
+        cloneBone.updateMatrix();
     }
 
-    showAxisAngleOfBone(bone, name)
-    {
-        bone.updateMatrixWorld(true);
-        bone.updateMatrix();
-        let globalQuaternion = new THREE.Quaternion();
-        bone.getWorldQuaternion(globalQuaternion);
-        let localQuat = bone.quaternion.clone();
-        let inverseMatrix = new THREE.Matrix4().getInverse(bone.matrixWorld);
-        let globalePosition = bone.position;
-        //console.log("Ok");
-
-        //console.log("Local", localQuat);
-        let worldQuat = bone.localToWorldQuaternion(localQuat);
-        //console.log("World", worldQuat);
-        worldQuat = bone.worldToLocalQuaternion(worldQuat);
-        //console.log("Local", worldQuat);
-
-        //globalQuaternion.multiply(localQuat.clone().conjugate());
-
-        let {axis, angle} = globalQuaternion.toAngleAxis();
-        //console.log(name);
-        //console.log("Bone", bone);
-        //console.log("Local Quaternion", bone.quaternion);
-        //console.log("Global Quaternion", globalQuaternion);
-        //console.log("Local Position", bone.position);
-        //console.log("Global Position", globalePosition);
-        //console.log("Axis", axis);
-        //console.log("Angle", angle);
-        return axis;
-    }
-
-    showAxisAngleOfQuaternion(quat, name)
-    {
-        let {axis, angle} = quat.toAngleAxis();
-        console.log(name);
-        console.log("Axis", axis);
-        console.log("Angle", angle);
-        return axis;
-    }
 }
 export default Ragdoll;

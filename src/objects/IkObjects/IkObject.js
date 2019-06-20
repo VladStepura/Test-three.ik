@@ -26,7 +26,7 @@ class IkObject
 
         this.originalObjectMatrix = {};
         this.cloneObjectMatrix = {};
-        this.startAxisAngle = {};
+        this.bonesDelta = {};
     }
 
     // Takes skeleton and target for it's limbs
@@ -157,18 +157,8 @@ class IkObject
         console.log("Rotation", this.originalRotationDiffrenceOfBones);
         console.log("Cloned object", this.clonedObject);
         console.log("Original object", this.originalObject);
-        /*  this.chainObjects[1].controlTarget.control.addEventListener('pointermove', ( event ) =>
-          {
-              let bone =  this.originalObject.getObjectByName("LeftHand");
-              let targetPosition =  this.chainObjects[1].controlTarget.target.position;
-              bone.getWorldPosition(targetPosition);
-          });
-          this.chainObjects[2].controlTarget.control.addEventListener('pointermove', ( event ) =>
-          {
-              let bone =  this.originalObject.getObjectByName("RightHand");
-              let targetPosition =  this.chainObjects[2].controlTarget.target.position;
-              bone.getWorldPosition(targetPosition);
-          });*/
+        this.initializeAxisAngle();
+        //this.recalculateDifference();
     }
 
     // Calculates back's offset in order to move with hips
@@ -185,15 +175,16 @@ class IkObject
     {
         if(this.isEnabledIk)
         {
+            //this.lateUpdate();
             // Solves the inverse kinematic of object
             this.ik.solve();
+            this.lateUpdate();
 
             if(IK.firstRun)
             {
-                this.recalculateDifference();
-                this.initializeAxisAngle();
+                //this.initializeAxisAngle();
+                //this.recalculateDifference();
             }
-            this.lateUpdate();
         }
     }
 
@@ -305,40 +296,22 @@ class IkObject
 
     recalculateDifference()
     {
-        console.log("Recalculate");
-        this.originalRotationDiffrenceOfBones = [];
         let clonedSkin = this.clonedObject.children[1];
         let originalSkin = this.originalObject.children[1];
         let clonedBones = clonedSkin.skeleton.bones;
         let originalBones = originalSkin.skeleton.bones;
-        let originalHips = originalBones[0];
-        let clonedHips = clonedBones[0];
-        let matrix = originalHips.matrixWorld.clone();
-        let inverseMatrix = new THREE.Matrix4().getInverse(matrix);
-      /*  clonedHips.applyMatrix(inverseMatrix);
-        clonedHips.updateMatrixWorld(true);*/
         for (let i = 0; i < clonedBones.length; i++)
         {
-            let originBone = originalBones[i];
+            let originalBone = originalBones[i];
             let cloneBone = clonedBones[i];
-            let difference = new THREE.Euler(0, 0, 0);
-            let cloneQuaternion = cloneBone.rotation; //new THREE.Quaternion();
-            let originalQuaternion = originBone.rotation;//new THREE.Quaternion();
-            //cloneBone.getWorldQuaternion(cloneQuaternion);
-            //originBone.getWorldQuaternion(originalQuaternion);
-            difference.x = cloneQuaternion.x - originalQuaternion.x;
-            difference.y = cloneQuaternion.y - originalQuaternion.y;
-            difference.z = cloneQuaternion.z - originalQuaternion.z;
-            this.originalRotationDiffrenceOfBones.push(difference);
 
-            this.originalObjectMatrix[originBone.name] = originBone.matrix.clone();
+            if(!this.ikBonesName.some((boneName) => originalBone.name === boneName || boneName === "Hips"))
+            {
+                continue;
+            }
+            this.originalObjectMatrix[originalBone.name] = originalBone.matrix.clone();
             this.cloneObjectMatrix[cloneBone.name] = cloneBone.matrix.clone();
         }
-/*        clonedHips.applyMatrix(matrix);
-        clonedHips.updateMatrixWorld(true);*/
-        originalBones[1].updateMatrix();
-        clonedBones[1].updateMatrix();
-        console.log(originalBones[1]);
     }
 
     initializeAxisAngle()
@@ -357,15 +330,31 @@ class IkObject
             let globalDeltaQuat = new THREE.Quaternion();
             globalDeltaQuat.multiply(cloneBone.worldQuaternion().clone().conjugate());
             globalDeltaQuat.multiply(originalBone.worldQuaternion());
+            if(cloneBone.name === "LeftArm")
+            {
+                console.log("Clone", globalDeltaQuat);
+            }
+            let cloneToOriginDelta = new THREE.Quaternion();
+            cloneToOriginDelta.multiply(cloneBone.worldQuaternion().inverse());
+            cloneToOriginDelta.multiply(originalBone.worldQuaternion());
 
-            this.startAxisAngle[cloneBone.name] = {};
-            this.startAxisAngle[cloneBone.name].clonedAxis = cloneBone.quaternion.toAngleAxis();
-            this.startAxisAngle[originalBone.name].originalAxis = originalBone.quaternion.toAngleAxis();
-            this.startAxisAngle[originalBone.name].cloneQuat = cloneBone.quaternion.clone();
-            this.startAxisAngle[originalBone.name].originQuat = originalBone.quaternion.clone();
-            this.startAxisAngle[originalBone.name].deltaQuat = deltaQuat;
-            this.startAxisAngle[originalBone.name].globaldeltaQuat = globalDeltaQuat;
+            let originToCloneDelta = new THREE.Quaternion();
+            originToCloneDelta.multiply(originalBone.worldQuaternion().inverse());
+            originToCloneDelta.multiply(cloneBone.worldQuaternion());
+            this.originalObjectMatrix[originalBone.name] = originalBone.matrix.clone();
+            this.cloneObjectMatrix[cloneBone.name] = cloneBone.matrix.clone();
+
+            this.bonesDelta[cloneBone.name] = {};
+            this.bonesDelta[originalBone.name].cloneQuat = cloneBone.worldQuaternion().clone();
+            this.bonesDelta[originalBone.name].originQuat = originalBone.worldQuaternion().clone();
+            this.bonesDelta[originalBone.name].cloneToOriginDelta = cloneToOriginDelta;
+            this.bonesDelta[originalBone.name].originToCloneDelta = originToCloneDelta;
         }
+    }
+
+    reinitializeConstaraint()
+    {
+
     }
 
 }
