@@ -364,11 +364,13 @@
         var direction = new three.Vector3().copy(joint._getDirection());
         var parentDirection = joint._localToWorldDirection(new three.Vector3().copy(Z_AXIS)).normalize();
         var currentAngle = direction.angleTo(parentDirection) * RAD2DEG;
+        console.log("APplied ball constraint");
         if (this.angle / 2 < currentAngle) {
           direction.normalize();
           var correctionAxis = new three.Vector3().crossVectors(parentDirection, direction).normalize();
           parentDirection.applyAxisAngle(correctionAxis, this.angle * DEG2RAD * 0.5);
           joint._setDirection(parentDirection);
+
           return true;
         }
         return false;
@@ -439,15 +441,15 @@
               constraintApplied = constraintApplied || applied;
             }
           }
-          for (var _iterator = this.ikConstraints[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true)
-          {
-            var constraint = _step.value;
-            if (constraint && constraint.applyConstraint)
-            {
-              var applied = constraint.applyConstraint(this);
-              constraintApplied = constraintApplied || applied;
-            }
-          }
+         for (var _iterator = this.ikConstraints[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true)
+         {
+           var constraint = _step.value;
+           if (constraint && constraint.applyConstraint)
+           {
+             var applied = constraint.applyConstraint(this);
+             constraintApplied = constraintApplied || applied;
+           }
+         }
         } catch (err) {
           _didIteratorError = true;
           _iteratorError = err;
@@ -578,7 +580,7 @@
       this.effectorIndex = null;
       this.chains = new Map();
       this.origin = null;
-      this.iterations = 100;
+      this.iterations = 500;
       this.tolerance = 0.01;
       this._depth = -1;
       this._targetPosition = new three.Vector3();

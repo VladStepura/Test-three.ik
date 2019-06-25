@@ -16,6 +16,7 @@ class ChainObject
         this.rootJointName = rootJointName;
         this.currentJoint = 0;
         this.constraints = [];
+        this.poleConstraint = null;
     }
 
     updateMatrix()

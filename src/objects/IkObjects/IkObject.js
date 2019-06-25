@@ -1,4 +1,4 @@
-import {IK, IKJoint} from "../../core/three-ik";
+import {IK, IKJoint, IKBallConstraint, IKHingeConstraint} from "../../core/three-ik";
 import * as THREE from "three";
 import {setZDirecion, setReverseZ, setZBack} from "../../utils/axisUtils";
 import ChainObject from "./ChainObject";
@@ -27,6 +27,7 @@ class IkObject
         this.originalObjectMatrix = {};
         this.cloneObjectMatrix = {};
         this.bonesDelta = {};
+        this.hipsMouseDown = false;
     }
 
     // Takes skeleton and target for it's limbs
@@ -58,6 +59,7 @@ class IkObject
         chainObjects.push(new ChainObject("RightArm", "RightHand", this.controlTargets[2]));
         chainObjects.push(new ChainObject("LeftUpLeg", "LeftFoot", this.controlTargets[3]));
         chainObjects.push(new ChainObject("RightUpLeg", "RightFoot", this.controlTargets[4]));
+       
         scene.add(clonedSkeleton);
         // Goes through all scene objects
         clonedSkeleton.traverse((object) =>
@@ -131,7 +133,8 @@ class IkObject
                         }
                         this.ikBonesName.push(object.name);
                         // Creates joint by passing current bone and its constraint
-                        let joint = new IKJoint(object, {});
+                        let constraints = chainObject.constraints;
+                        let joint = new IKJoint(object, {constraints});
                         let globaPose = new THREE.Vector3();
                         // Adds joint to chain and sets target
                         chain.add(joint, {target});
@@ -141,12 +144,13 @@ class IkObject
 
             }
         });
+        this.ikBonesName.push("Hips");
         scene.remove(clonedSkeleton);
         // Goes through list of constraints and adds it to IK
         chains.forEach((chain) =>
         {
             this.ik.add(chain);
-        });
+        }); 
         // Sets skeleton helper for showing bones
         this.skeletonHelper = new THREE.SkeletonHelper( skeleton );
         // Sets line width of skeleton helper
@@ -183,7 +187,7 @@ class IkObject
             if(IK.firstRun)
             {
                 //this.initializeAxisAngle();
-                //this.recalculateDifference();
+                this.recalculateDifference();
             }
         }
     }
@@ -207,6 +211,7 @@ class IkObject
         let targetPosition = hipsTarget.position.clone();
         this.hips.parent.worldToLocal(targetPosition);
         this.hips.position.copy(targetPosition);
+        this.hips.updateMatrix();
     }
 
     // Removes ikObject's all elements from scene
@@ -300,15 +305,10 @@ class IkObject
         let originalSkin = this.originalObject.children[1];
         let clonedBones = clonedSkin.skeleton.bones;
         let originalBones = originalSkin.skeleton.bones;
-        for (let i = 0; i < clonedBones.length; i++)
+        for (let i = 0; i < 1; i++)
         {
             let originalBone = originalBones[i];
             let cloneBone = clonedBones[i];
-
-            if(!this.ikBonesName.some((boneName) => originalBone.name === boneName || boneName === "Hips"))
-            {
-                continue;
-            }
             this.originalObjectMatrix[originalBone.name] = originalBone.matrix.clone();
             this.cloneObjectMatrix[cloneBone.name] = cloneBone.matrix.clone();
         }
